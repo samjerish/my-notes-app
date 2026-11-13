@@ -70,6 +70,22 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .feedback-dialog { width: min(450px, calc(100vw - 32px)); }
 .subject-dialog::backdrop { background: #202b2566; }
 .subject-dialog form { padding: 24px; }
+.share-dialog-content { padding: 24px; }
+.share-dialog .share-dialog-content h2 { margin: 0 0 7px; font: 700 19px "Manrope", sans-serif; }
+.share-dialog .share-dialog-content p { color: #78857a; font-size: 12px; line-height: 1.55; }
+.share-file-name { margin: 0 0 8px !important; color: #445247 !important; font-weight: 700; overflow-wrap: anywhere; }
+.share-status { min-height: 19px; margin: 0 0 14px !important; }
+.share-options { display: grid; gap: 9px; }
+.share-choice { width: 100%; min-height: 68px; display: flex; align-items: center; gap: 13px; padding: 10px 12px; border: 1px solid #e4e9e2; border-radius: 9px; color: #344239; background: #fff; cursor: pointer; text-align: left; }
+.share-choice:hover:not(:disabled) { border-color: #b7c9b8; background: #f7faf6; }
+.share-choice:disabled { cursor: wait; opacity: .6; }
+.share-choice-icon { width: 42px; height: 42px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 10px; }
+.share-choice-icon svg { width: 23px; height: 23px; }
+.whatsapp-icon { color: #168b52; background: #e8f6ed; }
+.download-icon { color: var(--green-dark); background: #edf4ed; }
+.share-choice > span:last-child { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.share-choice strong { font-size: 13px; }
+.share-choice small { color: #849087; font-size: 11px; }
 .subject-dialog h2 { margin: 0 0 6px; font: 700 17px "Manrope", sans-serif; }
 .subject-dialog p { margin: 0 0 20px; color: #89918b; font-size: 11px; }
 .subject-dialog label { display: block; margin-bottom: 7px; color: #526056; font-size: 10px; font-weight: 700; }

@@ -26,6 +26,9 @@ let cloudBackend = null;
 let sharedFiles = null;
 let stopCloudSubscriptions = null;
 let pendingFileAssignment = null;
+let pendingShareFile = null;
+let pendingShareBlob = null;
+let shareLoadId = 0;
 let pendingAdminRequest = null;
 let preserveAdminRequestOnCodeClose = false;
 let requestedUploadSection = null;
@@ -34,6 +37,9 @@ let authorizedAdminUploadSection = null;
 const fileInput = document.querySelector("#file-input");
 const fileList = document.querySelector("#file-list");
 const emptyState = document.querySelector("#empty-state");
+const shareDialog = document.querySelector("#share-dialog");
+const shareWhatsAppButton = document.querySelector("#share-whatsapp-button");
+const shareDownloadButton = document.querySelector("#share-download-button");
 
 function openDatabase() {
   return new Promise((resolve, reject) => {
@@ -322,6 +328,11 @@ function makeSubjectCard(subject, fileCount) {
 }
 
 async function handleFileAction(action, file) {
+  if (action === "share") {
+    void openShareDialog(file);
+    return;
+  }
+
   if (action === "assign") {
     pendingFileAssignment = file;
     const select = document.querySelector("#file-assign-subject");
@@ -364,31 +375,85 @@ async function handleFileAction(action, file) {
     link.download = file.name;
     link.click();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    return;
   }
+}
 
-  if (navigator.share) {
-    try {
-      const sharedFile = new File([blob], file.name, { type: file.type });
-      if (navigator.canShare?.({ files: [sharedFile] })) {
-        await navigator.share({ files: [sharedFile], title: file.name });
-        URL.revokeObjectURL(url);
-        return;
-      }
-    } catch (error) {
-      URL.revokeObjectURL(url);
-      if (error.name === "AbortError") return;
-      console.error("Could not share PDF:", error);
-    }
-  }
-
+function downloadPdfBlob(file, blob) {
+  const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
   link.download = file.name;
   link.click();
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-  showToast("Sharing isn't available here, so the PDF was downloaded. Send it to share.");
 }
+
+async function openShareDialog(file) {
+  const loadId = ++shareLoadId;
+  pendingShareFile = file;
+  pendingShareBlob = null;
+  document.querySelector("#share-file-name").textContent = file.name;
+  document.querySelector("#share-status").textContent = "Preparing PDF…";
+  shareWhatsAppButton.disabled = true;
+  shareDownloadButton.disabled = true;
+  shareDialog.showModal();
+
+  try {
+    const blob = cloudBackend?.auth.currentUser && isCloudFile(file)
+      ? await cloudBackend.getFileBlob(file)
+      : file.blob;
+    if (loadId !== shareLoadId) return;
+    if (!(blob instanceof Blob)) throw new Error("The PDF data is unavailable.");
+    pendingShareBlob = blob;
+    document.querySelector("#share-status").textContent =
+      "Choose WhatsApp in your device’s share menu, or download the PDF.";
+    shareWhatsAppButton.disabled = false;
+    shareDownloadButton.disabled = false;
+  } catch (error) {
+    if (loadId !== shareLoadId) return;
+    console.error("Could not prepare PDF for sharing:", error);
+    document.querySelector("#share-status").textContent = "Could not load this PDF. Close and try again.";
+    showToast("Couldn't open this PDF. Check your connection and try again.", true);
+  }
+}
+
+shareDialog.addEventListener("close", () => {
+  shareLoadId += 1;
+  pendingShareFile = null;
+  pendingShareBlob = null;
+  shareWhatsAppButton.disabled = true;
+  shareDownloadButton.disabled = true;
+});
+
+document.querySelector("#share-close-button").addEventListener("click", () => shareDialog.close());
+shareDownloadButton.addEventListener("click", () => {
+  if (!pendingShareFile || !pendingShareBlob) return;
+  downloadPdfBlob(pendingShareFile, pendingShareBlob);
+  shareDialog.close();
+});
+shareWhatsAppButton.addEventListener("click", async () => {
+  if (!pendingShareFile || !pendingShareBlob) return;
+  const file = pendingShareFile;
+  const blob = pendingShareBlob;
+  const sharedFile = new File([blob], file.name, { type: "application/pdf" });
+
+  if (navigator.share && navigator.canShare?.({ files: [sharedFile] })) {
+    try {
+      await navigator.share({ files: [sharedFile], title: file.name });
+      shareDialog.close();
+    } catch (error) {
+      if (error.name === "AbortError") return;
+      console.error("Could not share PDF:", error);
+      showToast("Couldn't share this PDF. Download it and attach it in WhatsApp.", true);
+    }
+    return;
+  }
+
+  const message = `Please see the attached PDF: ${file.name}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+  downloadPdfBlob(file, blob);
+  shareDialog.close();
+  showToast("PDF downloaded. Attach it in WhatsApp to send.");
+});
 
 function updateUploadProgress(percent, message) {
   window.clearTimeout(uploadProgressTimer);
