@@ -103,7 +103,7 @@
           type: "application/pdf",
           section,
           subject,
-          source,
+          source: source || "library",
           createdAt: options.createdAt || Date.now(),
           uploadedBy: user.uid,
           chunkCount,
