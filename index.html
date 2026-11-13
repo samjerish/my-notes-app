@@ -225,6 +225,13 @@
           </select>
           <label for="contribution-file">PDF file</label>
           <input id="contribution-file" class="contribution-file-input" type="file" accept="application/pdf,.pdf" required />
+          <div id="contribution-upload-progress" class="upload-progress upload-progress-inline" role="status" aria-live="polite" hidden>
+            <div class="upload-progress-heading">
+              <span class="upload-progress-label">Uploading PDF</span>
+              <strong class="upload-progress-value">0%</strong>
+            </div>
+            <progress max="100" value="0" aria-label="PDF upload progress"></progress>
+          </div>
           <div class="subject-dialog-actions">
             <button id="contribution-cancel" class="secondary-button" type="button">Cancel</button>
             <button class="primary-button" type="submit">Add contribution</button>
@@ -288,6 +295,13 @@
           </div>
         </form>
       </dialog>
+      <div id="upload-progress-panel" class="upload-progress upload-progress-panel" role="status" aria-live="polite" hidden>
+        <div class="upload-progress-heading">
+          <span class="upload-progress-label">Uploading PDF</span>
+          <strong class="upload-progress-value">0%</strong>
+        </div>
+        <progress max="100" value="0" aria-label="PDF upload progress"></progress>
+      </div>
       <div id="toast" class="toast" role="status" aria-live="polite"></div>
     </div>
     <dialog id="admin-login-dialog" class="subject-dialog" aria-labelledby="admin-login-title">
@@ -305,8 +319,8 @@
         </div>
       </form>
     </dialog>
-    <script src="firebase-config.js?v=20261114-admin-login-v5"></script>
-    <script src="firebase-backend.js?v=20261114-admin-login-v5"></script>
-    <script src="app.js?v=20261114-admin-login-v5"></script>
+    <script src="firebase-config.js?v=20261114-upload-progress-v6"></script>
+    <script src="firebase-backend.js?v=20261114-upload-progress-v6"></script>
+    <script src="app.js?v=20261114-upload-progress-v6"></script>
   </body>
 </html>

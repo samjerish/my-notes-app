@@ -84,6 +84,8 @@
       const saveFile = async (file, section, subject, source, options = {}) => {
         const user = auth.currentUser;
         if (!user) throw new Error("Sign in before uploading a PDF.");
+        const reportProgress = typeof options.onProgress === "function" ? options.onProgress : () => {};
+        reportProgress(0);
         const isAdminUpload = section === "revision" || section === "notes";
         if (isAdminUpload && !isAdmin()) {
           throw new Error("Only the configured Firebase admin can upload Revision or Handwritten PDFs.");
@@ -111,6 +113,7 @@
         };
 
         let recordCreated = false;
+        let uploadedBytes = 0;
         try {
           await firestoreSdk.runTransaction(database, async (transaction) => {
             const existing = await transaction.get(pdfReference);
@@ -139,9 +142,14 @@
               });
             }
             await batch.commit();
+            for (let index = offset; index < batchEnd; index += 1) {
+              uploadedBytes += Math.min(PDF_CHUNK_SIZE, bytes.byteLength - index * PDF_CHUNK_SIZE);
+            }
+            reportProgress(Math.min(99, Math.round((uploadedBytes / bytes.byteLength) * 100)));
           }
 
           await firestoreSdk.updateDoc(pdfReference, { uploadStatus: "ready" });
+          reportProgress(100);
         } catch (error) {
           if (recordCreated) {
             try {

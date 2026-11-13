@@ -201,6 +201,13 @@ h1 span { color: var(--green-dark); }
 .toast { position: fixed; z-index: 5; right: 24px; bottom: 22px; max-width: min(360px, calc(100vw - 32px)); padding: 11px 15px; border: 1px solid #e2e8e0; border-radius: 8px; color: #405347; background: #fff; box-shadow: 0 7px 24px #26372918; font-size: 11px; opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity .2s, transform .2s; }
 .toast.visible { opacity: 1; transform: translateY(0); }
 .toast.error { color: #a4463e; border-color: #f0d7d2; }
+.upload-progress { padding: 11px 13px; border: 1px solid #dfe8de; border-radius: 8px; color: #405347; background: #fff; box-shadow: 0 7px 24px #26372912; font-size: 10px; }
+.upload-progress-panel { width: min(320px, calc(100vw - 32px)); position: fixed; z-index: 4; right: 24px; bottom: 72px; }
+.upload-progress-inline { margin-top: 12px; }
+.upload-progress-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.upload-progress-label { min-width: 0; overflow-wrap: anywhere; }
+.upload-progress-value { flex: 0 0 auto; color: var(--green-dark); }
+.upload-progress progress { display: block; width: 100%; height: 8px; margin-top: 9px; accent-color: var(--green); }
 
 @media (min-width: 1400px) { .page-wrap { padding-top: 48px; } .welcome-row { min-height: 164px; } }
 @media (max-width: 900px) { .page-wrap { padding-right: 4%; padding-left: 4%; } .topbar { padding-right: 4%; padding-left: 4%; } .welcome-row { padding-left: 25px; } .welcome-art { right: 8px; opacity: .8; } }
@@ -208,6 +215,7 @@ h1 span { color: var(--green-dark); }
 @media (max-width: 680px) { .topbar-actions .feedback-open-button { height: 34px; padding: 0 8px; font-size: 9px; } }
 @media (max-width: 400px) { .topbar { padding: 0 12px; } .page-wrap { padding-right: 12px; padding-left: 12px; } .welcome-row { padding-left: 14px; } .eyebrow { font-size: 7px; } h1 { font-size: 19px; } .welcome-art { right: -60px; } .subject-description { max-width: 235px; line-height: 1.5; } .primary-button { padding: 0 9px; } .file-row { gap: 8px; padding-right: 7px; padding-left: 8px; } .file-action { width: 25px; } }
 @media (max-width: 480px) { .login-screen { justify-content: center; padding: 78px 16px 20px; } .login-brand { top: 22px; left: 50%; } .login-card { padding: 30px 24px 23px; } .login-art { right: 16px; } .login-card h1 { max-width: 245px; font-size: 22px; } }
+@media (max-width: 480px) { .upload-progress-panel { right: 16px; bottom: 66px; } }
 
 .login-intro { font-size: 12px; }
 .login-label { font-size: 12px; }

@@ -34,7 +34,7 @@ Firebase Hosting provides a public `web.app` address after deployment. Add a cus
 ## 4. Admin and shared-library behavior
 
 - Students enter their name and batch as before. Firebase Anonymous Authentication gives each browser a signed-in identity; the shared library is available across devices, but name/batch profiles are not recoverable accounts.
-- Anyone signed in on the hosted site can read shared PDFs, upload a contribution, and send feedback. Firestore listeners deliver completed uploads and subject changes to other signed-in devices automatically; devices need an internet connection and the hosted HTTPS site.
+- Anyone signed in on the hosted site can read shared PDFs, upload a contribution, and send feedback. Upload progress is shown as a percentage; Firestore listeners deliver completed uploads and subject changes to other signed-in devices automatically. Devices need an internet connection and the hosted HTTPS site.
 - Only the verified admin account (`sf920336@gmail.com`) sees subject add/remove controls and can add Revision or Handwritten PDFs. The admin profile displays as Sam, batch 3. Admin-only actions also require the existing code prompt.
 - Normal users do not see subject add/remove or PDF delete controls. They can contribute PDFs and send feedback. A contributor may not delete or reassign a published contribution; the admin can manage shared PDFs.
 - The code prompt is only a user-interface check. Firestore rules enforce admin access.

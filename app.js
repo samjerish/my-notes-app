@@ -21,6 +21,7 @@ const state = { view: "library", subject: "TOC", section: "revision", sortOldest
 let subjects = ["TOC"];
 let db;
 let toastTimer;
+let uploadProgressTimer;
 let cloudBackend = null;
 let sharedFiles = null;
 let stopCloudSubscriptions = null;
@@ -110,10 +111,15 @@ function isCloudFile(file) {
   return Number.isInteger(file.chunkCount) || Boolean(file.storagePath);
 }
 
-function saveFile(file, section, subject = state.subject, source = "library") {
-  return cloudBackend?.auth.currentUser
-    ? cloudBackend.saveFile(file, section, subject, source)
-    : saveLocalFile(file, section, subject, source);
+function saveFile(file, section, subject = state.subject, source = "library", options = {}) {
+  if (cloudBackend?.auth.currentUser) {
+    return cloudBackend.saveFile(file, section, subject, source, options);
+  }
+  options.onProgress?.(0);
+  return saveLocalFile(file, section, subject, source).then((record) => {
+    options.onProgress?.(100);
+    return record;
+  });
 }
 
 function removeFile(file) {
@@ -384,6 +390,32 @@ async function handleFileAction(action, file) {
   showToast("Sharing isn't available here, so the PDF was downloaded. Send it to share.");
 }
 
+function updateUploadProgress(percent, message) {
+  window.clearTimeout(uploadProgressTimer);
+  const value = Math.max(0, Math.min(100, Math.round(percent)));
+  ["#upload-progress-panel", "#contribution-upload-progress"].forEach((selector) => {
+    const panel = document.querySelector(selector);
+    panel.hidden = false;
+    panel.querySelector(".upload-progress-label").textContent = message;
+    panel.querySelector(".upload-progress-value").textContent = `${value}%`;
+    panel.querySelector("progress").value = value;
+  });
+}
+
+function finishUploadProgress() {
+  updateUploadProgress(100, "Upload complete");
+  uploadProgressTimer = window.setTimeout(() => {
+    document.querySelector("#upload-progress-panel").hidden = true;
+    document.querySelector("#contribution-upload-progress").hidden = true;
+  }, 1800);
+}
+
+function hideUploadProgress() {
+  window.clearTimeout(uploadProgressTimer);
+  document.querySelector("#upload-progress-panel").hidden = true;
+  document.querySelector("#contribution-upload-progress").hidden = true;
+}
+
 async function render() {
   const allFiles = await getAllFiles();
   const displaySubjects = [...subjects];
@@ -464,13 +496,25 @@ async function addSelectedFiles(files, section = state.section) {
     return;
   }
   try {
-    for (const file of pdfs) await saveFile(file, section);
+    for (const [index, file] of pdfs.entries()) {
+      const progressLabel = pdfs.length === 1
+        ? `Uploading ${file.name}`
+        : `Uploading ${index + 1} of ${pdfs.length}: ${file.name}`;
+      await saveFile(file, section, state.subject, "library", {
+        onProgress: (progress) => updateUploadProgress(
+          ((index + progress / 100) / pdfs.length) * 100,
+          progressLabel,
+        ),
+      });
+    }
     await render();
+    finishUploadProgress();
     const sectionName = section === "notes"
       ? "Handwritten notes"
       : section === CONTRIBUTION_SECTION ? "Contributed PDFs" : "Revision PDFs";
     showToast(`${pdfs.length} PDF${pdfs.length === 1 ? "" : "s"} added to ${sectionName}.`);
   } catch (error) {
+    hideUploadProgress();
     console.error("Could not save PDF:", error);
     showToast(error.message || "Couldn't save the PDF. Check storage and try again.", true);
   }
@@ -866,14 +910,25 @@ document.querySelector("#contribution-form").addEventListener("submit", async (e
     return;
   }
 
+  const submitButton = document.querySelector("#contribution-form button[type='submit']");
+  const cancelButton = document.querySelector("#contribution-cancel");
+  submitButton.disabled = true;
+  cancelButton.disabled = true;
   try {
-    await saveFile(file, CONTRIBUTION_SECTION, subject, "contribution");
+    await saveFile(file, CONTRIBUTION_SECTION, subject, "contribution", {
+      onProgress: (progress) => updateUploadProgress(progress, `Uploading ${file.name}`),
+    });
   } catch (error) {
+    hideUploadProgress();
     console.error("Could not save contributed PDF:", error);
     showToast(error.message || "Couldn't save this PDF. Check your connection and try again.", true);
     return;
+  } finally {
+    submitButton.disabled = false;
+    cancelButton.disabled = false;
   }
 
+  finishUploadProgress();
   contributionDialog.close();
   state.subject = subject;
   state.view = "subject";
