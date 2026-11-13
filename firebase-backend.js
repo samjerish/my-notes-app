@@ -1,5 +1,8 @@
 (function () {
   const SDK_VERSION = "13.3.0";
+  const PDF_CHUNK_SIZE = 768 * 1024;
+  const MAX_PDF_SIZE = 25 * 1024 * 1024;
+  const CHUNKS_PER_BATCH = 8;
   let backendPromise;
 
   function isConfigured(config) {
@@ -8,7 +11,6 @@
       && config.apiKey
       && config.authDomain
       && config.projectId
-      && config.storageBucket
       && config.appId
       && !Object.values(config).some((value) => typeof value === "string" && value.startsWith("YOUR_")),
     );
@@ -20,17 +22,15 @@
 
     backendPromise = (async () => {
       const base = `https://www.gstatic.com/firebasejs/${SDK_VERSION}`;
-      const [appSdk, authSdk, firestoreSdk, storageSdk] = await Promise.all([
+      const [appSdk, authSdk, firestoreSdk] = await Promise.all([
         import(`${base}/firebase-app.js`),
         import(`${base}/firebase-auth.js`),
         import(`${base}/firebase-firestore.js`),
-        import(`${base}/firebase-storage.js`),
       ]);
 
       const app = appSdk.initializeApp(config, "your-study-corner");
       const auth = authSdk.getAuth(app);
       const database = firestoreSdk.getFirestore(app);
-      const storage = storageSdk.getStorage(app);
       await new Promise((resolve, reject) => {
         let unsubscribe = () => {};
         unsubscribe = authSdk.onAuthStateChanged(
@@ -61,7 +61,23 @@
       const getAllFiles = async () => {
         if (!auth.currentUser) return [];
         const snapshot = await firestoreSdk.getDocs(firestoreSdk.collection(database, "pdfs"));
-        return snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
+        return snapshot.docs
+          .map((item) => ({ id: item.id, ...item.data() }))
+          .filter((file) => file.uploadStatus !== "uploading");
+      };
+
+      const deletePdfData = async (id) => {
+        const pdfReference = firestoreSdk.doc(database, "pdfs", id);
+        const chunks = await firestoreSdk.getDocs(
+          firestoreSdk.collection(database, "pdfs", id, "chunks"),
+        );
+        if (chunks.docs.length > 499) {
+          throw new Error("This PDF has too many data chunks to remove safely. Contact the admin.");
+        }
+        const batch = firestoreSdk.writeBatch(database);
+        chunks.docs.forEach((chunk) => batch.delete(chunk.ref));
+        batch.delete(pdfReference);
+        await batch.commit();
       };
 
       const saveFile = async (file, section, subject, source, options = {}) => {
@@ -71,10 +87,15 @@
         if (isAdminUpload && !isAdmin()) {
           throw new Error("Only the configured Firebase admin can upload Revision or Handwritten PDFs.");
         }
+        if (!file || typeof file.arrayBuffer !== "function" || !Number.isInteger(file.size)
+          || file.size <= 0 || file.size > MAX_PDF_SIZE) {
+          throw new Error("Choose a PDF smaller than 25 MiB.");
+        }
 
         const id = options.id || crypto.randomUUID();
-        const storagePath = isAdminUpload ? `pdfs/admin/${id}` : `pdfs/community/${user.uid}/${id}`;
-        const storageReference = storageSdk.ref(storage, storagePath);
+        const pdfReference = firestoreSdk.doc(database, "pdfs", id);
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        const chunkCount = Math.ceil(bytes.byteLength / PDF_CHUNK_SIZE);
         const record = {
           name: file.name,
           size: file.size,
@@ -82,23 +103,55 @@
           section,
           subject,
           source,
-          storagePath,
           createdAt: options.createdAt || Date.now(),
           uploadedBy: user.uid,
+          chunkCount,
+          uploadStatus: "uploading",
         };
 
-        await storageSdk.uploadBytes(storageReference, file, { contentType: "application/pdf" });
+        let recordCreated = false;
         try {
-          await firestoreSdk.setDoc(firestoreSdk.doc(database, "pdfs", id), record);
+          await firestoreSdk.runTransaction(database, async (transaction) => {
+            const existing = await transaction.get(pdfReference);
+            if (existing.exists()) throw new Error("A PDF with this ID is already in the shared library.");
+            transaction.set(pdfReference, record);
+          });
+          recordCreated = true;
+
+          for (let offset = 0; offset < chunkCount; offset += CHUNKS_PER_BATCH) {
+            const batch = firestoreSdk.writeBatch(database);
+            const batchEnd = Math.min(offset + CHUNKS_PER_BATCH, chunkCount);
+            for (let index = offset; index < batchEnd; index += 1) {
+              const start = index * PDF_CHUNK_SIZE;
+              const end = Math.min(start + PDF_CHUNK_SIZE, bytes.byteLength);
+              const chunkReference = firestoreSdk.doc(
+                database,
+                "pdfs",
+                id,
+                "chunks",
+                String(index),
+              );
+              batch.set(chunkReference, {
+                index,
+                content: firestoreSdk.Bytes.fromUint8Array(bytes.slice(start, end)),
+                uploadedBy: user.uid,
+              });
+            }
+            await batch.commit();
+          }
+
+          await firestoreSdk.updateDoc(pdfReference, { uploadStatus: "ready" });
         } catch (error) {
-          try {
-            await storageSdk.deleteObject(storageReference);
-          } catch (cleanupError) {
-            console.error("Could not clean up an unlisted uploaded PDF:", cleanupError);
+          if (recordCreated) {
+            try {
+              await deletePdfData(id);
+            } catch (cleanupError) {
+              console.error("Could not clean up an incomplete PDF upload:", cleanupError);
+            }
           }
           throw error;
         }
-        return { id, ...record };
+        return { id, ...record, uploadStatus: "ready" };
       };
 
       const updatePdf = async (id, values) => {
@@ -146,7 +199,11 @@
           if (!auth.currentUser) throw new Error("Sign in before syncing the shared library.");
           const stopFiles = firestoreSdk.onSnapshot(
             firestoreSdk.collection(database, "pdfs"),
-            (snapshot) => onFiles(snapshot.docs.map((item) => ({ id: item.id, ...item.data() }))),
+            (snapshot) => onFiles(
+              snapshot.docs
+                .map((item) => ({ id: item.id, ...item.data() }))
+                .filter((file) => file.uploadStatus !== "uploading"),
+            ),
             onError,
           );
           const stopSubjects = firestoreSdk.onSnapshot(
@@ -162,14 +219,39 @@
         saveFile,
         getFileBlob: async (file) => {
           if (!auth.currentUser) throw new Error("Sign in to open this PDF.");
-          return storageSdk.getBlob(storageSdk.ref(storage, file.storagePath));
+          if (file.storagePath) {
+            const storageSdk = await import(`${base}/firebase-storage.js`);
+            return storageSdk.getBlob(
+              storageSdk.ref(storageSdk.getStorage(app), file.storagePath),
+            );
+          }
+          const snapshot = await firestoreSdk.getDocs(
+            firestoreSdk.collection(database, "pdfs", file.id, "chunks"),
+          );
+          const chunks = snapshot.docs
+            .map((item) => item.data())
+            .sort((left, right) => left.index - right.index);
+          if (!Number.isInteger(file.chunkCount) || chunks.length !== file.chunkCount
+            || chunks.some((chunk, index) => chunk.index !== index)) {
+            throw new Error("This PDF is incomplete in the shared library. Ask the admin to publish it again.");
+          }
+          const parts = chunks.map((chunk) => firestoreSdk.Bytes.toUint8Array(chunk.content));
+          if (parts.reduce((size, part) => size + part.byteLength, 0) !== file.size) {
+            throw new Error("This PDF failed its size check. Ask the admin to publish it again.");
+          }
+          return new Blob(parts, { type: file.type || "application/pdf" });
         },
         removeFile: async (file) => {
           if (!auth.currentUser) throw new Error("Sign in before removing a PDF.");
           const canManage = isAdmin() || (file.section === "contributed" && file.uploadedBy === auth.currentUser.uid);
           if (!canManage) throw new Error("Only the uploader or admin can remove this PDF.");
-          await storageSdk.deleteObject(storageSdk.ref(storage, file.storagePath));
-          await firestoreSdk.deleteDoc(firestoreSdk.doc(database, "pdfs", file.id));
+          if (file.storagePath) {
+            const storageSdk = await import(`${base}/firebase-storage.js`);
+            await storageSdk.deleteObject(
+              storageSdk.ref(storageSdk.getStorage(app), file.storagePath),
+            );
+          }
+          await deletePdfData(file.id);
         },
         moveFileToSubject: async (file, subject) => {
           if (!auth.currentUser) throw new Error("Sign in before assigning a PDF.");

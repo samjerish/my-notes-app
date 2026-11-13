@@ -120,6 +120,10 @@ function getAllFiles() {
   return sharedFiles ? Promise.resolve(sharedFiles) : cloudBackend.getAllFiles();
 }
 
+function isCloudFile(file) {
+  return Number.isInteger(file.chunkCount) || Boolean(file.storagePath);
+}
+
 function saveFile(file, section, subject = state.subject, source = "library") {
   return cloudBackend?.auth.currentUser
     ? cloudBackend.saveFile(file, section, subject, source)
@@ -127,7 +131,7 @@ function saveFile(file, section, subject = state.subject, source = "library") {
 }
 
 function removeFile(file) {
-  return cloudBackend?.auth.currentUser && file.storagePath
+  return cloudBackend?.auth.currentUser && isCloudFile(file)
     ? cloudBackend.removeFile(file)
     : removeLocalFile(file.id);
 }
@@ -139,7 +143,7 @@ function moveFileToSubject(file, subject) {
 }
 
 function canManageFile(file) {
-  return !cloudBackend?.auth.currentUser || !file.storagePath || cloudBackend.canManageFile(file);
+  return !cloudBackend?.auth.currentUser || !isCloudFile(file) || cloudBackend.canManageFile(file);
 }
 
 function showBackendStatus(message, isError = false) {
@@ -351,7 +355,7 @@ async function handleFileAction(action, file) {
   }
 
   let blob = file.blob;
-  if (cloudBackend?.auth.currentUser && file.storagePath) {
+  if (cloudBackend?.auth.currentUser && isCloudFile(file)) {
     try {
       blob = await cloudBackend.getFileBlob(file);
     } catch (error) {
@@ -851,7 +855,7 @@ document.querySelector("#contribution-form").addEventListener("submit", async (e
     await saveFile(file, CONTRIBUTION_SECTION, subject, "contribution");
   } catch (error) {
     console.error("Could not save contributed PDF:", error);
-    showToast(error.message || "Couldn't save this PDF. Check storage and try again.", true);
+    showToast(error.message || "Couldn't save this PDF. Check your connection and try again.", true);
     return;
   }
 

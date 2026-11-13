@@ -10,6 +10,10 @@ service cloud.firestore {
         && request.auth.token.email == 'sf920336@gmail.com';
     }
 
+    function pdfReference(pdfId) {
+      return get(/databases/$(database)/documents/pdfs/$(pdfId));
+    }
+
     function validPdf() {
       return request.resource.data.name is string
         && request.resource.data.name.size() > 0
@@ -21,7 +25,34 @@ service cloud.firestore {
         && request.resource.data.subject is string
         && request.resource.data.section in ['revision', 'notes', 'contributed']
         && request.resource.data.createdAt is int
+        && request.resource.data.chunkCount is int
+        && request.resource.data.chunkCount > 0
+        && request.resource.data.chunkCount <= 34
+        && request.resource.data.uploadStatus == 'uploading'
         && request.resource.data.uploadedBy == request.auth.uid;
+    }
+
+    function canUploadPdfChunk(pdfId) {
+      let pdf = pdfReference(pdfId);
+      return signedIn()
+        && pdf.data.uploadedBy == request.auth.uid
+        && pdf.data.uploadStatus == 'uploading'
+        && pdf.data.chunkCount is int
+        && request.resource.data.index is int
+        && request.resource.data.index >= 0
+        && request.resource.data.index < pdf.data.chunkCount
+        && request.resource.data.content is bytes
+        && request.resource.data.uploadedBy == request.auth.uid
+        && (pdf.data.section == 'contributed' || isAdmin());
+    }
+
+    function canDeletePdfChunk(pdfId) {
+      let pdf = pdfReference(pdfId);
+      return isAdmin()
+        || (signedIn()
+          && pdf.data.section == 'contributed'
+          && pdf.data.uploadedBy == request.auth.uid
+          && resource.data.uploadedBy == request.auth.uid);
     }
 
     match /settings/library {
@@ -37,26 +68,38 @@ service cloud.firestore {
       allow create: if validPdf()
         && request.resource.data.keys().hasOnly([
           'name', 'size', 'type', 'section', 'subject', 'source',
-          'storagePath', 'createdAt', 'uploadedBy'
+          'createdAt', 'uploadedBy', 'chunkCount', 'uploadStatus'
         ])
         && (
-          (request.resource.data.section == 'contributed'
-            && request.resource.data.storagePath == 'pdfs/community/' + request.auth.uid + '/' + pdfId)
-          || (isAdmin()
-            && request.resource.data.section in ['revision', 'notes']
-            && request.resource.data.storagePath == 'pdfs/admin/' + pdfId)
+          request.resource.data.section == 'contributed'
+          || (isAdmin() && request.resource.data.section in ['revision', 'notes'])
         );
       allow update: if isAdmin()
         || (signedIn()
           && resource.data.section == 'contributed'
           && resource.data.uploadedBy == request.auth.uid
           && request.resource.data.uploadedBy == resource.data.uploadedBy
-          && request.resource.data.storagePath == resource.data.storagePath
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['subject']));
+          && (
+            (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['subject'])
+              && request.resource.data.subject is string)
+            || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['uploadStatus'])
+              && resource.data.uploadStatus == 'uploading'
+              && request.resource.data.uploadStatus == 'ready')
+          ));
       allow delete: if isAdmin()
         || (signedIn()
           && resource.data.section == 'contributed'
           && resource.data.uploadedBy == request.auth.uid);
+
+      match /chunks/{chunkId} {
+        allow read: if signedIn()
+          && pdfReference(pdfId).data.uploadStatus == 'ready';
+        allow create: if canUploadPdfChunk(pdfId)
+          && request.resource.data.keys().hasAll(['index', 'content', 'uploadedBy'])
+          && request.resource.data.keys().hasOnly(['index', 'content', 'uploadedBy']);
+        allow update: if false;
+        allow delete: if canDeletePdfChunk(pdfId);
+      }
     }
 
     match /users/{userId} {
