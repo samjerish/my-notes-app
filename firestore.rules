@@ -53,6 +53,7 @@ service cloud.firestore {
         || (signedIn()
           && pdf.data.section == 'contributed'
           && pdf.data.uploadedBy == request.auth.uid
+          && pdf.data.uploadStatus == 'uploading'
           && resource.data.uploadedBy == request.auth.uid);
     }
 
@@ -80,21 +81,20 @@ service cloud.firestore {
           && resource.data.section == 'contributed'
           && resource.data.uploadedBy == request.auth.uid
           && request.resource.data.uploadedBy == resource.data.uploadedBy
-          && (
-            (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['subject'])
-              && request.resource.data.subject is string)
-            || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['uploadStatus'])
-              && resource.data.uploadStatus == 'uploading'
-              && request.resource.data.uploadStatus == 'ready')
-          ));
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['uploadStatus'])
+          && resource.data.uploadStatus == 'uploading'
+          && request.resource.data.uploadStatus == 'ready');
       allow delete: if isAdmin()
         || (signedIn()
           && resource.data.section == 'contributed'
-          && resource.data.uploadedBy == request.auth.uid);
+          && resource.data.uploadedBy == request.auth.uid
+          && resource.data.uploadStatus == 'uploading');
 
       match /chunks/{chunkId} {
         allow read: if signedIn()
-          && pdfReference(pdfId).data.uploadStatus == 'ready';
+          && (pdfReference(pdfId).data.uploadStatus == 'ready'
+            || (pdfReference(pdfId).data.uploadStatus == 'uploading'
+              && pdfReference(pdfId).data.uploadedBy == request.auth.uid));
         allow create: if canUploadPdfChunk(pdfId)
           && request.resource.data.keys().hasAll(['index', 'content', 'uploadedBy'])
           && request.resource.data.keys().hasOnly(['index', 'content', 'uploadedBy']);

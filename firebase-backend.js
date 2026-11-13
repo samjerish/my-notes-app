@@ -253,8 +253,7 @@
         },
         removeFile: async (file) => {
           if (!auth.currentUser) throw new Error("Sign in before removing a PDF.");
-          const canManage = isAdmin() || (file.section === "contributed" && file.uploadedBy === auth.currentUser.uid);
-          if (!canManage) throw new Error("Only the uploader or admin can remove this PDF.");
+          if (!isAdmin()) throw new Error("Only the admin can remove PDFs.");
           if (file.storagePath) {
             const storageSdk = await import(`${base}/firebase-storage.js`);
             await storageSdk.deleteObject(
@@ -265,8 +264,7 @@
         },
         moveFileToSubject: async (file, subject) => {
           if (!auth.currentUser) throw new Error("Sign in before assigning a PDF.");
-          const canManage = isAdmin() || (file.section === "contributed" && file.uploadedBy === auth.currentUser.uid);
-          if (!canManage) throw new Error("Only the uploader or admin can reassign this PDF.");
+          if (!isAdmin()) throw new Error("Only the admin can assign PDFs to subjects.");
           await updatePdf(file.id, { subject });
         },
         removeSubject: async (subject, updatedSubjects) => {
@@ -323,8 +321,7 @@
           }
           return uploaded;
         },
-        canManageFile: (file) => isAdmin()
-          || Boolean(auth.currentUser && file.section === "contributed" && file.uploadedBy === auth.currentUser.uid),
+        canManageFile: () => isAdmin(),
       };
     })();
 

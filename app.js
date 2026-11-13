@@ -3,6 +3,7 @@ const STORE_NAME = "pdfs";
 const PROFILE_KEY = "study-shelf-profile";
 const SUBJECTS_KEY = "study-shelf-subjects";
 const ADMIN_UPLOAD_CODE = "7061";
+const ADMIN_PROFILE = { name: "Sam", batch: "3" };
 const UNASSIGNED_SUBJECT = "Unassigned";
 const CONTRIBUTION_SECTION = "contributed";
 const BUNDLED_REVISION_FILES = [
@@ -89,21 +90,6 @@ function removeLocalFile(id) {
   return requestResult(db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).delete(id));
 }
 
-function moveLocalSubjectFilesToUnassigned(subject) {
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, "readwrite");
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.index("subject").getAll(subject);
-    request.onsuccess = () => {
-      request.result.forEach((file) => store.put({ ...file, subject: UNASSIGNED_SUBJECT }));
-    };
-    request.onerror = () => reject(request.error);
-    transaction.oncomplete = resolve;
-    transaction.onerror = () => reject(transaction.error);
-    transaction.onabort = () => reject(transaction.error || new Error("Could not move subject files."));
-  });
-}
-
 function moveLocalFileToSubject(file, subject) {
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, "readwrite");
@@ -143,7 +129,7 @@ function moveFileToSubject(file, subject) {
 }
 
 function canManageFile(file) {
-  return !cloudBackend?.auth.currentUser || !isCloudFile(file) || cloudBackend.canManageFile(file);
+  return Boolean(cloudBackend?.isAdmin() && isCloudFile(file) && cloudBackend.canManageFile(file));
 }
 
 function showBackendStatus(message, isError = false) {
@@ -167,6 +153,7 @@ function updateAdminMenu() {
     : adminIsConfigured ? "Admin sign in" : "Admin setup required";
   adminButton.disabled = isAdmin || !adminIsConfigured;
   document.querySelector("#publish-local-library-button").hidden = !isAdmin;
+  document.querySelector("#add-subject-button").hidden = !isAdmin;
 }
 
 function cacheSubjects(sharedSubjects) {
@@ -315,7 +302,7 @@ function makeSubjectCard(subject, fileCount) {
   openButton.append(mark, copy, arrow);
   card.append(openButton);
 
-  if (subject !== UNASSIGNED_SUBJECT) {
+  if (cloudBackend?.isAdmin() && subject !== UNASSIGNED_SUBJECT) {
     const removeButton = document.createElement("button");
     removeButton.className = "subject-remove";
     removeButton.type = "button";
@@ -488,13 +475,14 @@ async function addSelectedFiles(files, section = state.section) {
 }
 
 function showLibrary(profile) {
+  const activeProfile = cloudBackend?.isAdmin() ? ADMIN_PROFILE : profile;
   state.view = "library";
   document.querySelector("#login-screen").hidden = true;
   document.querySelector("#app-shell").hidden = false;
-  document.querySelector(".top-avatar").textContent = profile.name.trim().charAt(0).toUpperCase();
-  document.querySelector(".top-avatar").title = `${profile.name} · Batch ${profile.batch}`;
-  document.querySelector("#profile-name").textContent = profile.name;
-  document.querySelector("#profile-batch").textContent = `Batch ${profile.batch}`;
+  document.querySelector(".top-avatar").textContent = activeProfile.name.trim().charAt(0).toUpperCase();
+  document.querySelector(".top-avatar").title = `${activeProfile.name} · Batch ${activeProfile.batch}`;
+  document.querySelector("#profile-name").textContent = activeProfile.name;
+  document.querySelector("#profile-batch").textContent = `Batch ${activeProfile.batch}`;
   updateAdminMenu();
 }
 
@@ -685,6 +673,7 @@ document.querySelector("#admin-login-form").addEventListener("submit", async (ev
       document.querySelector("#admin-login-email").value.trim(),
       document.querySelector("#admin-login-password").value,
     );
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(ADMIN_PROFILE));
   } catch (error) {
     console.error("Admin sign-in failed:", error);
     errorMessage.textContent = error.message || "Couldn't sign in as admin.";
@@ -696,6 +685,7 @@ document.querySelector("#admin-login-form").addEventListener("submit", async (ev
   const request = pendingAdminRequest;
   pendingAdminRequest = null;
   document.querySelector("#admin-login-dialog").close();
+  showLibrary(ADMIN_PROFILE);
   updateAdminMenu();
   startWatchingCloudLibrary();
   try {
@@ -746,6 +736,10 @@ const subjectDialog = document.querySelector("#subject-dialog");
 const subjectInput = document.querySelector("#subject-name");
 
 document.querySelector("#add-subject-button").addEventListener("click", () => {
+  if (!cloudBackend?.isAdmin()) {
+    showToast("Only the admin can add subjects.", true);
+    return;
+  }
   openAdminCodeDialog({ type: "subject" });
 });
 
@@ -753,6 +747,11 @@ document.querySelector("#subject-cancel").addEventListener("click", () => subjec
 
 document.querySelector("#subject-form").addEventListener("submit", async (event) => {
   event.preventDefault();
+  if (!cloudBackend?.isAdmin()) {
+    showToast("Only the admin can add subjects.", true);
+    return;
+  }
+
   const subject = subjectInput.value.trim();
   if (!subject) {
     showToast("Enter a subject name.", true);
@@ -777,8 +776,7 @@ document.querySelector("#subject-form").addEventListener("submit", async (event)
 
   const updatedSubjects = [...subjects, subject];
   try {
-    if (cloudBackend?.auth.currentUser) await cloudBackend.saveSubjects(updatedSubjects);
-    else localStorage.setItem(SUBJECTS_KEY, JSON.stringify(updatedSubjects));
+    await cloudBackend.saveSubjects(updatedSubjects);
   } catch (error) {
     console.error("Could not save the new subject:", error);
     showToast(error.message || "Couldn't save this subject. Please try again.", true);
@@ -795,6 +793,10 @@ document.querySelector("#subject-form").addEventListener("submit", async (event)
 document.querySelector("#subject-list").addEventListener("click", async (event) => {
   const removeButton = event.target.closest(".subject-remove");
   if (removeButton) {
+    if (!cloudBackend?.isAdmin()) {
+      showToast("Only the admin can remove subjects.", true);
+      return;
+    }
     const subject = removeButton.dataset.removeSubject;
     openAdminCodeDialog({ type: "remove-subject", subject });
     return;
@@ -918,24 +920,16 @@ document.querySelector("#cancel-remove-subject").addEventListener("click", () =>
 document.querySelector("#confirm-remove-subject").addEventListener("click", async () => {
   const subject = pendingSubjectRemoval;
   if (!subject) return;
+  if (!cloudBackend?.isAdmin()) {
+    showToast("Only the admin can remove subjects.", true);
+    return;
+  }
 
   const updatedSubjects = subjects.filter((existing) => existing !== subject);
   try {
-    if (cloudBackend?.auth.currentUser) {
-      await cloudBackend.removeSubject(subject, updatedSubjects);
-    } else {
-      localStorage.setItem(SUBJECTS_KEY, JSON.stringify(updatedSubjects));
-      await moveLocalSubjectFilesToUnassigned(subject);
-    }
+    await cloudBackend.removeSubject(subject, updatedSubjects);
   } catch (error) {
     console.error(`Could not remove subject "${subject}":`, error);
-    if (!cloudBackend?.auth.currentUser) {
-      try {
-        localStorage.setItem(SUBJECTS_KEY, JSON.stringify(subjects));
-      } catch (rollbackError) {
-        console.error("Could not restore the subject list:", rollbackError);
-      }
-    }
     showToast(error.message || "Couldn't remove this subject. Please try again.", true);
     return;
   }
