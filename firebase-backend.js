@@ -1,9 +1,23 @@
 (function () {
   const SDK_VERSION = "13.3.0";
   const PDF_CHUNK_SIZE = 768 * 1024;
-  const MAX_PDF_SIZE = 25 * 1024 * 1024;
+  const MAX_FILE_SIZE = 25 * 1024 * 1024;
   const CHUNKS_PER_BATCH = 8;
+  const IMAGE_TYPES_BY_EXTENSION = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg" };
   let backendPromise;
+
+  function getSupportedFileType(file, section) {
+    const extension = file?.name?.toLowerCase().match(/\.[^.]+$/)?.[0] || "";
+    const expectedType = extension === ".pdf"
+      ? "application/pdf"
+      : section === "exam-papers" ? IMAGE_TYPES_BY_EXTENSION[extension] : null;
+    if (!expectedType) return null;
+    if (file.type && file.type !== expectedType
+      && !(expectedType === "application/pdf" && file.type === "application/x-pdf")) {
+      return null;
+    }
+    return expectedType;
+  }
 
   function isConfigured(config) {
     return Boolean(
@@ -73,7 +87,7 @@
           firestoreSdk.collection(database, "pdfs", id, "chunks"),
         );
         if (chunks.docs.length > 499) {
-          throw new Error("This PDF has too many data chunks to remove safely. Contact the admin.");
+          throw new Error("This file has too many data chunks to remove safely. Contact the admin.");
         }
         const batch = firestoreSdk.writeBatch(database);
         chunks.docs.forEach((chunk) => batch.delete(chunk.ref));
@@ -83,7 +97,7 @@
 
       const saveFile = async (file, section, subject, source, options = {}) => {
         const user = auth.currentUser;
-        if (!user) throw new Error("Sign in before uploading a PDF.");
+        if (!user) throw new Error("Sign in before uploading a file.");
         const reportProgress = typeof options.onProgress === "function" ? options.onProgress : () => {};
         reportProgress(0);
         const isAdminUpload = section === "revision" || section === "notes";
@@ -91,8 +105,14 @@
           throw new Error("Only the configured Firebase admin can upload Revision or Handwritten PDFs.");
         }
         if (!file || typeof file.arrayBuffer !== "function" || !Number.isInteger(file.size)
-          || file.size <= 0 || file.size > MAX_PDF_SIZE) {
-          throw new Error("Choose a PDF smaller than 25 MiB.");
+          || file.size <= 0 || file.size > MAX_FILE_SIZE || typeof file.name !== "string") {
+          throw new Error("Choose a file up to 25 MiB.");
+        }
+        const type = getSupportedFileType(file, section);
+        if (!type) {
+          throw new Error(section === "exam-papers"
+            ? "Exam Papers accept PDFs, PNGs, and JPGs."
+            : "Only PDF files can be added to this section.");
         }
 
         const id = options.id || crypto.randomUUID();
@@ -102,7 +122,7 @@
         const record = {
           name: file.name,
           size: file.size,
-          type: "application/pdf",
+          type,
           section,
           subject,
           source: source || "library",
@@ -155,7 +175,7 @@
             try {
               await deletePdfData(id);
             } catch (cleanupError) {
-              console.error("Could not clean up an incomplete PDF upload:", cleanupError);
+              console.error("Could not clean up an incomplete file upload:", cleanupError);
             }
           }
           throw error;
@@ -164,7 +184,7 @@
       };
 
       const updatePdf = async (id, values) => {
-        if (!auth.currentUser) throw new Error("Sign in before updating a PDF.");
+        if (!auth.currentUser) throw new Error("Sign in before updating a file.");
         await firestoreSdk.updateDoc(firestoreSdk.doc(database, "pdfs", id), values);
       };
 
@@ -236,7 +256,7 @@
         },
         saveFile,
         getFileBlob: async (file) => {
-          if (!auth.currentUser) throw new Error("Sign in to open this PDF.");
+          if (!auth.currentUser) throw new Error("Sign in to open this file.");
           if (file.storagePath) {
             const storageSdk = await import(`${base}/firebase-storage.js`);
             return storageSdk.getBlob(
@@ -251,17 +271,17 @@
             .sort((left, right) => left.index - right.index);
           if (!Number.isInteger(file.chunkCount) || chunks.length !== file.chunkCount
             || chunks.some((chunk, index) => chunk.index !== index)) {
-            throw new Error("This PDF is incomplete in the shared library. Ask the admin to publish it again.");
+            throw new Error("This file is incomplete in the shared library. Ask the admin to publish it again.");
           }
           const parts = chunks.map((chunk) => chunk.content.toUint8Array());
           if (parts.reduce((size, part) => size + part.byteLength, 0) !== file.size) {
-            throw new Error("This PDF failed its size check. Ask the admin to publish it again.");
+            throw new Error("This file failed its size check. Ask the admin to publish it again.");
           }
           return new Blob(parts, { type: file.type || "application/pdf" });
         },
         removeFile: async (file) => {
-          if (!auth.currentUser) throw new Error("Sign in before removing a PDF.");
-          if (!isAdmin()) throw new Error("Only the admin can remove PDFs.");
+          if (!auth.currentUser) throw new Error("Sign in before removing a file.");
+          if (!isAdmin()) throw new Error("Only the admin can remove files.");
           if (file.storagePath) {
             const storageSdk = await import(`${base}/firebase-storage.js`);
             await storageSdk.deleteObject(
@@ -271,7 +291,7 @@
           await deletePdfData(file.id);
         },
         moveFileToSubject: async (file, subject) => {
-          if (!auth.currentUser) throw new Error("Sign in before assigning a PDF.");
+          if (!auth.currentUser) throw new Error("Sign in before assigning a file.");
           if (!isAdmin()) throw new Error("Only the admin can assign PDFs to subjects.");
           await updatePdf(file.id, { subject });
         },
@@ -284,7 +304,7 @@
             ),
           );
           if (files.docs.length > 499) {
-            throw new Error("This subject has too many PDFs to move at once. Contact support before removing it.");
+            throw new Error("This subject has too many files to move at once. Contact support before removing it.");
           }
 
           const batch = firestoreSdk.writeBatch(database);

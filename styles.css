@@ -60,13 +60,12 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .contribute-open-button { white-space: nowrap; }
 .feedback-open-button { height: 36px; margin: 0; padding: 0 12px; color: var(--green-dark); font-size: 10px; white-space: nowrap; }
 .feedback-open-button:hover { color: var(--green-dark); background: #e8f0e7; }
-.profile-control { position: relative; }
+.profile-control { position: relative; display: flex; align-items: center; gap: 8px; }
 .theme-toggle { width: 32px; height: 32px; display: grid; place-items: center; padding: 0; border: 1px solid #e8ede7; border-radius: 50%; color: var(--green-dark); background: #fff; cursor: pointer; }
 .theme-toggle svg { width: 16px; height: 16px; }
 .theme-toggle .sun-icon { display: none; }
 .theme-toggle:hover { background: #eef4ed; }
 .theme-toggle:focus-visible { outline: 2px solid #89a58c; outline-offset: 3px; }
-.profile-control { display: flex; align-items: center; gap: 8px; }
 .top-avatar { width: 29px; height: 29px; border: 0; cursor: pointer; }
 .profile-menu { width: 210px; position: absolute; z-index: 6; top: calc(100% + 10px); right: 0; display: flex; flex-direction: column; gap: 5px; padding: 13px; border: 1px solid #e8ebe5; border-radius: 9px; background: #fff; box-shadow: 0 8px 24px #26372918; }
 .profile-menu strong { overflow: hidden; color: #39463d; font-size: 11px; text-overflow: ellipsis; }
@@ -161,7 +160,7 @@ h1 span { color: var(--green-dark); }
 .primary-button { height: 36px; display: flex; align-items: center; gap: 7px; padding: 0 13px; border: 0; border-radius: 7px; color: #fff; background: var(--green); box-shadow: 0 2px 4px #496b571f; cursor: pointer; font-size: 10px; font-weight: 700; transition: background .16s, transform .16s; }
 .primary-button:hover { background: var(--green-dark); transform: translateY(-1px); }
 .primary-button svg { width: 15px; height: 15px; }
-.section-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; }
+.section-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
 .section-card { min-width: 0; min-height: 78px; display: flex; align-items: center; gap: 11px; padding: 13px 14px; border: 1px solid #e9ece6; border-radius: 9px; background: #fff; text-align: left; cursor: pointer; transition: border-color .16s, box-shadow .16s, transform .16s; }
 .section-card:hover { transform: translateY(-1px); border-color: #cbd9ca; box-shadow: 0 4px 12px #334a3a0c; }
 .section-card.active-section:not(.revision-card) { border-color: #b7c9b8; box-shadow: 0 0 0 2px #eaf1e9; }
@@ -189,6 +188,7 @@ h1 span { color: var(--green-dark); }
 .file-row { min-height: 60px; display: flex; align-items: center; gap: 12px; padding: 9px 13px; border: 1px solid #e9ece6; border-radius: 8px; background: #fff; transition: border-color .14s; }
 .file-row:hover { border-color: #cad7ca; }
 .pdf-icon { width: 34px; height: 36px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 7px; color: #c16f62; background: #fbefec; }
+.pdf-icon.image-file-icon { color: #667f9a; background: #eef3f8; }
 .pdf-icon svg { width: 19px; height: 19px; }
 .file-copy { min-width: 0; flex: 1; }
 .file-copy strong { display: block; overflow: hidden; color: #39463d; font-size: 10px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
@@ -370,10 +370,6 @@ h1 span { color: var(--green-dark); }
   .contribution-reminder-button { grid-column: 2; justify-self: start; }
 }
 
-@media (min-width: 681px) and (max-width: 900px) {
-  .section-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-
 .backend-status, .cloud-mode-notice {
   border: 1px solid #e8dfc7;
   border-radius: 7px;
@@ -509,6 +505,7 @@ html[data-theme="dark"] .feedback-notice,
 html[data-theme="dark"] .contribution-reminder-icon { color: #b6d2bb; background: #2a3b30; }
 html[data-theme="dark"] .file-label { color: #d7c49f; background: #3a3225; }
 html[data-theme="dark"] .file-label.notes-label { color: #b6d2bb; background: #2a3b30; }
+html[data-theme="dark"] .pdf-icon.image-file-icon { color: #b6d2df; background: #26333b; }
 html[data-theme="dark"] .empty-folder,
 html[data-theme="dark"] .empty-folder::before { border-color: #435449; background: #2a3b30; }
 html[data-theme="dark"] .empty-folder::after { background: #718e75; box-shadow: 0 5px 0 #718e75; }

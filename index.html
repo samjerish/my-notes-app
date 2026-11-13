@@ -11,7 +11,7 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=20261114-dark-mode-v9" />
+    <link rel="stylesheet" href="styles.css?v=20261114-exam-images-v10" />
   </head>
   <body>
     <main id="login-screen" class="login-screen">
@@ -84,7 +84,7 @@
             <strong id="profile-name">My profile</strong>
             <span id="profile-batch"></span>
             <button id="admin-login-button" type="button">Admin sign in</button>
-            <button id="publish-local-library-button" type="button" hidden>Publish this device’s PDFs</button>
+            <button id="publish-local-library-button" type="button" hidden>Publish this device’s files</button>
             <button id="logout-button" type="button">Log out</button>
           </div>
         </div>
@@ -198,7 +198,7 @@
                   <div class="empty-sparkle sparkle-one">✳</div>
                   <div class="empty-sparkle sparkle-two">✦</div>
                 </div>
-                <h3>No PDFs here just yet</h3>
+                <h3>No files here just yet</h3>
                 <p id="empty-state-description">Your revision material will feel right at home here. Drop in a PDF to get started.</p>
                 <button id="empty-upload-button" class="secondary-button" type="button"><span>＋</span> Add your first PDF</button>
               </div>
@@ -322,13 +322,13 @@
               <span class="share-choice-icon whatsapp-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><path d="M20.2 11.7a8.2 8.2 0 0 1-12.1 7.2l-4.1 1.1 1.1-4A8.2 8.2 0 1 1 20.2 11.7Z"/><path d="M8.2 7.7c.3-.6.7-.6 1-.6h.5c.2 0 .4.1.5.4l.7 1.7c.1.2.1.4 0 .6l-.6.7c-.2.2-.2.4-.1.6.4.8 1.1 1.5 1.8 1.9.2.1.4.1.6-.1l.8-.9c.2-.2.4-.2.6-.1l1.7.8c.2.1.3.3.3.5 0 .3-.2 1.1-.7 1.5-.5.5-1.2.7-1.8.6-.5-.1-1.2-.3-2.1-.8-1-.5-2-1.5-2.8-2.5-.8-1.1-1.1-2-1.2-2.6-.1-.7.1-1.4.5-1.7Z"/></svg>
               </span>
-              <span><strong>WhatsApp</strong><small>Share from your device’s share menu</small></span>
+              <span><strong>WhatsApp</strong><small id="share-whatsapp-description">Share from your device’s share menu</small></span>
             </button>
             <button id="share-download-button" class="share-choice" type="button" disabled>
               <span class="share-choice-icon download-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><path d="M12 4v11m0 0 4-4m-4 4-4-4M5 17v3h14v-3"/></svg>
               </span>
-              <span><strong>Download PDF</strong><small>Save it to attach or send later</small></span>
+              <span><strong id="share-download-label">Download PDF</strong><small id="share-download-description">Save it to attach or send later</small></span>
             </button>
           </div>
           <div class="subject-dialog-actions">
@@ -361,7 +361,7 @@
       </form>
     </dialog>
     <script src="firebase-config.js?v=20261114-whatsapp-share-v8"></script>
-    <script src="firebase-backend.js?v=20261114-whatsapp-share-v8"></script>
-    <script src="app.js?v=20261114-dark-mode-v9"></script>
+    <script src="firebase-backend.js?v=20261114-exam-images-v10"></script>
+    <script src="app.js?v=20261114-exam-images-v10"></script>
   </body>
 </html>

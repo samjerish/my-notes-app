@@ -8,6 +8,8 @@ const ADMIN_PROFILE = { name: "Sam", batch: "3" };
 const UNASSIGNED_SUBJECT = "Unassigned";
 const CONTRIBUTION_SECTION = "contributed";
 const EXAM_PAPERS_SECTION = "exam-papers";
+const MAX_FILE_SIZE = 25 * 1024 * 1024;
+const IMAGE_TYPES_BY_EXTENSION = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg" };
 const BUNDLED_REVISION_FILES = [
   "modelquestions.pdf",
   "REVISION1.pdf",
@@ -114,6 +116,19 @@ function saveLocalFile(file, section, subject = state.subject, source = "library
     blob: file,
   };
   return requestResult(db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).add(record));
+}
+
+function getSupportedFileType(file, section) {
+  const extension = file.name.toLowerCase().match(/\.[^.]+$/)?.[0] || "";
+  const expectedType = extension === ".pdf"
+    ? "application/pdf"
+    : section === EXAM_PAPERS_SECTION ? IMAGE_TYPES_BY_EXTENSION[extension] : null;
+  if (!expectedType) return null;
+  if (file.type && file.type !== expectedType
+    && !(expectedType === "application/pdf" && file.type === "application/x-pdf")) {
+    return null;
+  }
+  return expectedType;
 }
 
 async function seedBundledFiles() {
@@ -285,6 +300,7 @@ function escapeHTML(value) {
 function iconMarkup(kind) {
   if (kind === "share") return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.5-4.5m-7.5 7 7.5 4.5"/></svg>';
   if (kind === "delete") return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 7h15m-13.5 0 .8 13h10.4L18 7M9 7V4.5h6V7m-5 3v6m4-6v6"/></svg>';
+  if (kind === "image") return '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="m4.5 17 5-4 3.5 3 2.5-2 4 3"/></svg>';
   return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0 4-4m-4 4-4-4M5 17v3h14v-3"/></svg>';
 }
 
@@ -292,10 +308,11 @@ function makeFileRow(file) {
   const row = document.createElement("article");
   row.className = "file-row";
   row.classList.toggle("unassigned-file-row", state.subject === UNASSIGNED_SUBJECT);
+  const isImage = file.type?.startsWith("image/");
   row.innerHTML = `
-    <span class="pdf-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4 4v13H7a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2Z"/><path d="M14 4v4h4M8.5 15.5h7"/></svg></span>
+    <span class="pdf-icon ${isImage ? "image-file-icon" : ""}">${isImage ? iconMarkup("image") : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4 4v13H7a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2Z"/><path d="M14 4v4h4M8.5 15.5h7"/></svg>'}</span>
     <span class="file-copy"><strong title="${escapeHTML(file.name)}">${escapeHTML(file.name)}</strong><span>${formatSize(file.size)} · Added ${formatDate(file.createdAt)}</span></span>
-    <span class="file-label ${file.section === "notes" ? "notes-label" : ""}">${file.section === CONTRIBUTION_SECTION ? "Contributed" : file.section === "notes" ? "Handwritten" : file.section === EXAM_PAPERS_SECTION ? "Exam Paper" : "Revision"}</span>
+    <span class="file-label ${file.section === "notes" ? "notes-label" : ""}">${file.section === CONTRIBUTION_SECTION ? "Contributed" : file.section === "notes" ? "Handwritten" : isImage ? "Exam Image" : file.section === EXAM_PAPERS_SECTION ? "Exam Paper" : "Revision"}</span>
     <span class="file-actions">
       <button class="file-action" type="button" data-action="download" aria-label="Download ${escapeHTML(file.name)}" title="Download">${iconMarkup("download")}</button>
       <button class="file-action" type="button" data-action="share" aria-label="Share ${escapeHTML(file.name)}" title="Share">${iconMarkup("share")}</button>
@@ -340,7 +357,7 @@ function makeSubjectCard(subject, fileCount) {
   const name = document.createElement("strong");
   name.textContent = subject;
   const total = document.createElement("span");
-  total.textContent = `${fileCount} PDF${fileCount === 1 ? "" : "s"}`;
+  total.textContent = `${fileCount} file${fileCount === 1 ? "" : "s"}`;
   copy.append(name, total);
   const arrow = document.createElement("span");
   arrow.className = "subject-tile-arrow";
@@ -363,6 +380,7 @@ function makeSubjectCard(subject, fileCount) {
 }
 
 async function handleFileAction(action, file) {
+  const fileKind = file.type?.startsWith("image/") ? "image" : "PDF";
   if (action === "share") {
     void openShareDialog(file);
     return;
@@ -385,10 +403,10 @@ async function handleFileAction(action, file) {
     try {
       await removeFile(file);
       await render();
-      showToast("PDF removed from your shelf.");
+      showToast(`${fileKind} removed from your shelf.`);
     } catch (error) {
-      console.error("Could not remove PDF:", error);
-      showToast("Couldn't remove this PDF. Please try again.", true);
+      console.error(`Could not remove ${fileKind}:`, error);
+      showToast(`Couldn't remove this ${fileKind}. Please try again.`, true);
     }
     return;
   }
@@ -399,7 +417,7 @@ async function handleFileAction(action, file) {
       blob = await cloudBackend.getFileBlob(file);
     } catch (error) {
       console.error(`Could not download "${file.name}":`, error);
-      showToast("Couldn't open this PDF. Check your connection and try again.", true);
+      showToast(`Couldn't open this ${fileKind}. Check your connection and try again.`, true);
       return;
     }
   }
@@ -413,7 +431,7 @@ async function handleFileAction(action, file) {
   }
 }
 
-function downloadPdfBlob(file, blob) {
+function downloadFileBlob(file, blob) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -424,10 +442,15 @@ function downloadPdfBlob(file, blob) {
 
 async function openShareDialog(file) {
   const loadId = ++shareLoadId;
+  const fileKind = file.type?.startsWith("image/") ? "image" : "PDF";
   pendingShareFile = file;
   pendingShareBlob = null;
   document.querySelector("#share-file-name").textContent = file.name;
-  document.querySelector("#share-status").textContent = "Preparing PDF…";
+  document.querySelector("#share-title").textContent = `Share ${fileKind}`;
+  document.querySelector("#share-status").textContent = `Preparing ${fileKind}…`;
+  document.querySelector("#share-download-label").textContent = `Download ${fileKind}`;
+  document.querySelector("#share-whatsapp-description").textContent = `Share from your device’s share menu`;
+  document.querySelector("#share-download-description").textContent = `Save it to attach or send later`;
   shareWhatsAppButton.disabled = true;
   shareDownloadButton.disabled = true;
   shareDialog.showModal();
@@ -437,17 +460,17 @@ async function openShareDialog(file) {
       ? await cloudBackend.getFileBlob(file)
       : file.blob;
     if (loadId !== shareLoadId) return;
-    if (!(blob instanceof Blob)) throw new Error("The PDF data is unavailable.");
+    if (!(blob instanceof Blob)) throw new Error(`The ${fileKind} data is unavailable.`);
     pendingShareBlob = blob;
     document.querySelector("#share-status").textContent =
-      "Choose WhatsApp in your device’s share menu, or download the PDF.";
+      `Choose WhatsApp in your device’s share menu, or download the ${fileKind}.`;
     shareWhatsAppButton.disabled = false;
     shareDownloadButton.disabled = false;
   } catch (error) {
     if (loadId !== shareLoadId) return;
-    console.error("Could not prepare PDF for sharing:", error);
-    document.querySelector("#share-status").textContent = "Could not load this PDF. Close and try again.";
-    showToast("Couldn't open this PDF. Check your connection and try again.", true);
+    console.error(`Could not prepare ${fileKind} for sharing:`, error);
+    document.querySelector("#share-status").textContent = `Could not load this ${fileKind}. Close and try again.`;
+    showToast(`Couldn't open this ${fileKind}. Check your connection and try again.`, true);
   }
 }
 
@@ -462,14 +485,15 @@ shareDialog.addEventListener("close", () => {
 document.querySelector("#share-close-button").addEventListener("click", () => shareDialog.close());
 shareDownloadButton.addEventListener("click", () => {
   if (!pendingShareFile || !pendingShareBlob) return;
-  downloadPdfBlob(pendingShareFile, pendingShareBlob);
+  downloadFileBlob(pendingShareFile, pendingShareBlob);
   shareDialog.close();
 });
 shareWhatsAppButton.addEventListener("click", async () => {
   if (!pendingShareFile || !pendingShareBlob) return;
   const file = pendingShareFile;
   const blob = pendingShareBlob;
-  const sharedFile = new File([blob], file.name, { type: "application/pdf" });
+  const fileKind = file.type?.startsWith("image/") ? "image" : "PDF";
+  const sharedFile = new File([blob], file.name, { type: file.type || blob.type || "application/pdf" });
 
   if (navigator.share && navigator.canShare?.({ files: [sharedFile] })) {
     try {
@@ -477,17 +501,17 @@ shareWhatsAppButton.addEventListener("click", async () => {
       shareDialog.close();
     } catch (error) {
       if (error.name === "AbortError") return;
-      console.error("Could not share PDF:", error);
-      showToast("Couldn't share this PDF. Download it and attach it in WhatsApp.", true);
+      console.error(`Could not share ${fileKind}:`, error);
+      showToast(`Couldn't share this ${fileKind}. Download it and attach it in WhatsApp.`, true);
     }
     return;
   }
 
-  const message = `Please see the attached PDF: ${file.name}`;
+  const message = `Please see the attached ${fileKind}: ${file.name}`;
   window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
-  downloadPdfBlob(file, blob);
+  downloadFileBlob(file, blob);
   shareDialog.close();
-  showToast("PDF downloaded. Attach it in WhatsApp to send.");
+  showToast(`${fileKind} downloaded. Attach it in WhatsApp to send.`);
 });
 
 function updateUploadProgress(percent, message) {
@@ -531,10 +555,14 @@ async function render() {
   const isUnassigned = state.subject === UNASSIGNED_SUBJECT;
   const isExamPapers = state.section === EXAM_PAPERS_SECTION;
   document.querySelector("#section-grid").hidden = isUnassigned;
-  document.querySelector("#upload-button").hidden = isUnassigned || adminOnlyUploadHidden;
+  const uploadButton = document.querySelector("#upload-button");
+  uploadButton.hidden = isUnassigned || adminOnlyUploadHidden;
+  uploadButton.lastChild.textContent = isExamPapers ? "Add PDF or image" : "Add PDF";
   document.querySelector("#subject-description").hidden = isUnassigned;
   document.querySelector("#sort-button").hidden = isUnassigned;
-  document.querySelector("#empty-upload-button").hidden = isUnassigned || adminOnlyUploadHidden;
+  const emptyUploadButton = document.querySelector("#empty-upload-button");
+  emptyUploadButton.hidden = isUnassigned || adminOnlyUploadHidden;
+  emptyUploadButton.lastChild.textContent = isExamPapers ? "Add your first paper" : "Add your first PDF";
   document.querySelector("#subject-list").replaceChildren(
     ...displaySubjects.map((subject) => makeSubjectCard(subject, subjectCounts.get(subject))),
   );
@@ -558,7 +586,7 @@ async function render() {
   document.querySelector("#subject-description").textContent = state.subject === "TOC"
     ? "Theory of Computation · Your notes & revision material"
     : state.subject === UNASSIGNED_SUBJECT
-    ? "PDFs saved from removed subjects."
+    ? "Files saved from removed subjects."
     : `${state.subject} · Your notes & revision material`;
   const visibleFiles = isUnassigned ? subjectFiles : state.section === "notes"
     ? noteFiles
@@ -567,13 +595,13 @@ async function render() {
   const sectionFiles = visibleFiles
     .sort((a, b) => state.sortOldest ? a.createdAt - b.createdAt : b.createdAt - a.createdAt);
   document.querySelector("#files-title").textContent = isUnassigned
-    ? "Unassigned PDFs"
+    ? "Unassigned files"
     : state.section === "notes"
     ? "Handwritten notes"
     : state.section === CONTRIBUTION_SECTION ? "Contributed PDFs"
     : isExamPapers ? "Exam Papers" : "Revision PDFs";
   document.querySelector("#files-subtitle").textContent = isUnassigned
-    ? "Choose a subject for each PDF to add it to your library."
+    ? "Choose a subject for each file to add it to your library."
     : state.section === "notes"
     ? "Admin-only uploads · Scans of your own notes, all in one place."
     : state.section === CONTRIBUTION_SECTION
@@ -585,7 +613,7 @@ async function render() {
     : "Admin-only uploads · A tidy place for your last-minute refreshers.";
   document.querySelector("#files-total").textContent = sectionFiles.length;
   document.querySelector("#empty-state-description").textContent = isUnassigned
-    ? "No PDFs are currently assigned to a subject."
+    ? "No files are currently assigned to a subject."
     : isExamPapers
     ? "Add Internals and previous year question papers (PYQs) here for everyone to access."
     : `Your ${state.section === "notes" ? "handwritten notes" : state.section === CONTRIBUTION_SECTION ? "contributed" : "revision"} material will feel right at home here. Drop in a PDF to get started.`;
@@ -596,19 +624,29 @@ async function render() {
 }
 
 async function addSelectedFiles(files, section = state.section) {
-  const pdfs = [...files].filter((file) => file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf"));
-  if (!pdfs.length) {
-    showToast("Please choose a PDF file.", true);
+  const selectedFiles = [...files];
+  const uploads = selectedFiles.map((file) => {
+    const type = getSupportedFileType(file, section);
+    return type ? new File([file], file.name, { type, lastModified: file.lastModified }) : null;
+  });
+  if (!uploads.length || uploads.some((file) => !file)) {
+    showToast(section === EXAM_PAPERS_SECTION
+      ? "Choose PDF, PNG, or JPG files for Exam Papers."
+      : "Please choose a PDF file.", true);
+    return;
+  }
+  if (uploads.some((file) => file.size <= 0 || file.size > MAX_FILE_SIZE)) {
+    showToast("Each file must be 25 MiB or smaller.", true);
     return;
   }
   try {
-    for (const [index, file] of pdfs.entries()) {
-      const progressLabel = pdfs.length === 1
+    for (const [index, file] of uploads.entries()) {
+      const progressLabel = uploads.length === 1
         ? `Uploading ${file.name}`
-        : `Uploading ${index + 1} of ${pdfs.length}: ${file.name}`;
+        : `Uploading ${index + 1} of ${uploads.length}: ${file.name}`;
       await saveFile(file, section, state.subject, "library", {
         onProgress: (progress) => updateUploadProgress(
-          ((index + progress / 100) / pdfs.length) * 100,
+          ((index + progress / 100) / uploads.length) * 100,
           progressLabel,
         ),
       });
@@ -619,11 +657,12 @@ async function addSelectedFiles(files, section = state.section) {
       ? "Handwritten notes"
       : section === CONTRIBUTION_SECTION ? "Contributed PDFs"
       : section === EXAM_PAPERS_SECTION ? "Exam Papers" : "Revision PDFs";
-    showToast(`${pdfs.length} PDF${pdfs.length === 1 ? "" : "s"} added to ${sectionName}.`);
+    const itemName = section === EXAM_PAPERS_SECTION ? "file" : "PDF";
+    showToast(`${uploads.length} ${itemName}${uploads.length === 1 ? "" : "s"} added to ${sectionName}.`);
   } catch (error) {
     hideUploadProgress();
-    console.error("Could not save PDF:", error);
-    showToast(error.message || "Couldn't save the PDF. Check storage and try again.", true);
+    console.error("Could not save file:", error);
+    showToast(error.message || "Couldn't save this file. Check storage and try again.", true);
   }
 }
 
@@ -686,6 +725,9 @@ function isAdminOnlySection(section) {
 
 function openFilePicker(section) {
   requestedUploadSection = section;
+  fileInput.accept = section === EXAM_PAPERS_SECTION
+    ? "application/pdf,application/x-pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg"
+    : "application/pdf,application/x-pdf,.pdf";
   fileInput.click();
 }
 
@@ -1219,13 +1261,13 @@ document.querySelector("#publish-local-library-button").addEventListener("click"
   try {
     const localFiles = await getLocalFiles();
     const subjectList = subjects.length ? subjects.join(", ") : "none";
-    const message = `Publish ${localFiles.length} PDF${localFiles.length === 1 ? "" : "s"} and these subjects to the shared library?\n\n${subjectList}\n\nLocal copies will remain on this device.`;
+    const message = `Publish ${localFiles.length} file${localFiles.length === 1 ? "" : "s"} and these subjects to the shared library?\n\n${subjectList}\n\nLocal copies will remain on this device.`;
     if (!window.confirm(message)) return;
 
     const uploaded = await cloudBackend.migrateLocalLibrary(localFiles, subjects);
     await refreshCloudSubjects();
     await render();
-    showToast(`${uploaded} local PDF${uploaded === 1 ? "" : "s"} published to the shared library.`);
+    showToast(`${uploaded} local file${uploaded === 1 ? "" : "s"} published to the shared library.`);
     showBackendStatus("");
   } catch (error) {
     console.error("Could not publish the local library:", error);
@@ -1273,17 +1315,17 @@ async function initializeStudyCorner() {
     try {
       cloudBackend = await window.StudyCornerFirebase.createBackend(firebaseConfig, adminEmail);
       if (!cloudBackend) {
-        showBackendStatus("Firebase is not configured. This is a local-only preview; PDFs will not sync between devices.", true);
+        showBackendStatus("Firebase is not configured. This is a local-only preview; files will not sync between devices.", true);
       }
     } catch (error) {
       console.error("Could not connect to Firebase:", error);
       showBackendStatus(
-        `Firebase is unavailable. This is a local-only preview; PDFs will not sync. ${error.message || ""}`,
+        `Firebase is unavailable. This is a local-only preview; files will not sync. ${error.message || ""}`,
         true,
       );
     }
   } else {
-    showBackendStatus("Firebase is not configured. This is a local-only preview; PDFs will not sync between devices.", true);
+    showBackendStatus("Firebase is not configured. This is a local-only preview; files will not sync between devices.", true);
   }
 
   updateAdminMenu();

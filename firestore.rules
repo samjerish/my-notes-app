@@ -15,11 +15,13 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/pdfs/$(pdfId));
     }
 
-    function validPdf() {
+    function validStudyFile() {
       return request.resource.data.name is string
         && request.resource.data.name.size() > 0
         && request.resource.data.name.size() <= 255
-        && request.resource.data.type == 'application/pdf'
+        && (request.resource.data.type == 'application/pdf'
+          || (request.resource.data.section == 'exam-papers'
+            && request.resource.data.type in ['image/png', 'image/jpeg']))
         && request.resource.data.size is int
         && request.resource.data.size > 0
         && request.resource.data.size <= 26214400
@@ -67,7 +69,7 @@ service cloud.firestore {
 
     match /pdfs/{pdfId} {
       allow read: if signedIn();
-      allow create: if validPdf()
+      allow create: if validStudyFile()
         && request.resource.data.keys().hasOnly([
           'name', 'size', 'type', 'section', 'subject', 'source',
           'createdAt', 'uploadedBy', 'chunkCount', 'uploadStatus'
