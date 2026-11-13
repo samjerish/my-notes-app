@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f6f7f2" />
+    <title>Your Study Corner — your notes, in order</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main id="login-screen" class="login-screen">
+      <a class="brand login-brand" href="#" aria-label="Your Study Corner home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="M7 8.5c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v17H9a2 2 0 0 1-2-2v-15Z" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M7 23.5c0-1.1.9-2 2-2h16M12 11h8m-8 4h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="brand-copy">
+          <span class="brand-name">Your Study <span>Corner</span></span>
+          <span class="brand-developer">Developed by D Sam Jerish</span>
+        </span>
+      </a>
+      <section class="login-card">
+        <div class="login-art" aria-hidden="true">
+          <span class="login-art-page"></span>
+          <span class="login-art-page"></span>
+        </div>
+        <div class="eyebrow"><span class="eyebrow-line"></span> YOUR KNOWLEDGE CORNER</div>
+        <h1>Looking for <span>Notes</span>, you have found the <span>correct place</span></h1>
+        <p class="login-intro">Sign in with your name and batch number to access the respective notes and revision PDFs.</p>
+        <p id="login-backend-status" class="backend-status" role="status" hidden></p>
+        <form id="login-form">
+          <label class="login-label" for="login-name">Your name</label>
+          <input class="login-input" id="login-name" name="name" type="text" autocomplete="name" placeholder="Enter your name" required maxlength="100" />
+          <label class="login-label" for="login-batch">Batch number</label>
+          <input class="login-input" id="login-batch" name="batch" type="text" autocomplete="off" placeholder="Enter your batch number" required maxlength="40" />
+          <p id="login-error" class="login-error" role="alert" hidden></p>
+          <button id="login-submit" class="primary-button login-submit" type="submit">
+            <span>Get started</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+          </button>
+        </form>
+        <p class="login-privacy">Your name and batch identify your profile. Shared PDFs are available to signed-in users.</p>
+      </section>
+      <div class="login-footer">A little more organized. A lot more you.</div>
+    </main>
+    <div id="app-shell" class="app-shell" hidden>
+      <header class="topbar">
+        <a id="brand-home" class="brand" href="#" aria-label="Your Study Corner home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none">
+              <path d="M7 8.5c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v17H9a2 2 0 0 1-2-2v-15Z" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M7 23.5c0-1.1.9-2 2-2h16M12 11h8m-8 4h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="brand-copy">
+            <span class="brand-name">Your Study <span>Corner</span></span>
+            <span class="brand-developer">Developed by D Sam Jerish</span>
+          </span>
+        </a>
+        <div class="topbar-actions">
+          <button id="library-home-button" class="library-home-button" type="button">My Library</button>
+          <button id="contribute-open-button" class="primary-button contribute-open-button" type="button">Your Contribution</button>
+          <button id="feedback-open-button" class="secondary-button feedback-open-button" type="button">Your Feedback</button>
+          <div class="profile-control">
+            <button type="button" class="avatar top-avatar" aria-label="Your profile" aria-expanded="false" aria-controls="profile-menu">S</button>
+            <div id="profile-menu" class="profile-menu" hidden>
+              <strong id="profile-name">My profile</strong>
+              <span id="profile-batch"></span>
+              <button id="admin-login-button" type="button">Admin sign in</button>
+              <button id="publish-local-library-button" type="button" hidden>Publish this device’s PDFs</button>
+              <button id="logout-button" type="button">Log out</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div id="cloud-mode-notice" class="cloud-mode-notice" role="status" hidden></div>
+      <main class="main-content">
+        <div class="page-wrap">
+          <section id="library-view" class="library-view">
+            <section class="welcome-row">
+              <div class="welcome-copy">
+                <div class="eyebrow"><span class="eyebrow-line"></span> YOUR KNOWLEDGE CORNER</div>
+                <h1>Make this <span>Semester Better</span></h1>
+                <p>Browse your subjects and find the notes you need.</p>
+              </div>
+              <div class="welcome-art" aria-hidden="true">
+                <div class="art-sun"></div>
+                <div class="art-book art-book-back"></div>
+                <div class="art-book art-book-front"><span></span><span></span><span></span></div>
+                <div class="art-star">✳</div>
+              </div>
+            </section>
+            <aside class="contribution-reminder" aria-labelledby="contribution-reminder-title">
+              <span class="contribution-reminder-icon" aria-hidden="true">♥</span>
+              <div class="contribution-reminder-copy">
+                <h2 id="contribution-reminder-title">Let’s help each other learn</h2>
+                <p>I hope these notes are helping you. If you have a useful PDF or notes, share them through Your Contribution so another student can benefit too.</p>
+              </div>
+              <button id="contribution-reminder-button" class="secondary-button contribution-reminder-button" type="button">Share a resource</button>
+            </aside>
+            <div class="library-section-heading">
+              <div>
+                <h2>All subjects</h2>
+                <p>Your subjects, neatly stacked in one place.</p>
+              </div>
+              <button id="add-subject-button" class="primary-button" type="button">＋ Add subject</button>
+            </div>
+            <div id="subject-list" class="subject-list" aria-label="Subjects"></div>
+          </section>
+
+          <section id="subject-view" class="subject-view" hidden>
+            <button id="back-to-library" class="back-button" type="button">← My Library</button>
+            <section class="subject-heading">
+              <div>
+                <div class="subject-title-row"><span class="large-subject-dot"></span><h2 id="subject-heading">TOC</h2><span class="subject-tag">SUBJECT</span></div>
+                <p class="subject-description" id="subject-description">Theory of Computation · Your notes &amp; revision material</p>
+              </div>
+              <button id="upload-button" class="primary-button" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg>
+                Add PDF
+              </button>
+              <input id="file-input" type="file" accept="application/pdf,.pdf" multiple hidden />
+            </section>
+
+            <section id="section-grid" class="section-grid" aria-label="Subject sections">
+              <button class="section-card revision-card active-section" type="button" data-section="revision">
+                <span class="section-icon revision-icon">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.8h7l4 4v12.4H7a2 2 0 0 1-2-2V5.8a2 2 0 0 1 2-2Z"/><path d="M14 4v4h4M8.5 12h7m-7 3.5h7"/></svg>
+                </span>
+                <span class="section-info">
+                  <strong>Revision PDFs</strong>
+                  <span>Quick refresh before the big day</span>
+                  <small class="section-admin-indicator">ADMIN-ONLY ADDITIONS</small>
+                </span>
+                <span class="section-count" id="revision-count">0</span>
+                <span class="section-arrow">↗</span>
+              </button>
+              <button class="section-card notes-card" type="button" data-section="notes">
+                <span class="section-icon notes-icon">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 17.5-.8 3.3 3.3-.8L19 8.5 15.5 5 4 16.5Z"/><path d="m13.8 6.7 3.5 3.5M5 21h14"/></svg>
+                </span>
+                <span class="section-info">
+                  <strong>Handwritten notes</strong>
+                  <span>Your own words, your own way</span>
+                  <small class="section-admin-indicator">ADMIN-ONLY ADDITIONS</small>
+                </span>
+                <span class="section-count" id="notes-count">0</span>
+                <span class="section-arrow">↗</span>
+              </button>
+              <button class="section-card contribution-card" type="button" data-section="contributed">
+                <span class="section-icon contribution-icon">＋</span>
+                <span class="section-info"><strong>Contributed PDFs</strong><span>Materials added by you and visitors</span></span>
+                <span class="section-count" id="contributed-count">0</span>
+                <span class="section-arrow">↗</span>
+              </button>
+            </section>
+
+            <section class="files-section">
+              <div class="files-heading">
+                <div>
+                  <div class="files-title-row"><h2 id="files-title">Revision PDFs</h2><span class="files-total" id="files-total">0</span></div>
+                  <p id="files-subtitle">A tidy place for your last-minute refreshers.</p>
+                </div>
+                <button id="sort-button" class="sort-button" type="button">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14m0 0-3-3m3 3 3-3m5 0V5m0 0-3 3m3-3 3 3"/></svg>
+                  Newest first
+                </button>
+              </div>
+              <div id="file-list" class="file-list"></div>
+              <div id="empty-state" class="empty-state">
+                <div class="empty-illustration">
+                  <div class="empty-folder"></div>
+                  <div class="empty-sparkle sparkle-one">✳</div>
+                  <div class="empty-sparkle sparkle-two">✦</div>
+                </div>
+                <h3>No PDFs here just yet</h3>
+                <p>Your <span id="empty-section-name">revision</span> material will feel right at home here.<br />Drop in a PDF to get started.</p>
+                <button id="empty-upload-button" class="secondary-button" type="button"><span>＋</span> Add your first PDF</button>
+              </div>
+            </section>
+          </section>
+
+          <footer class="page-footer">
+            <span>Made for the way you study.</span>
+            <span>Small steps, big ideas <span class="footer-heart">♥</span></span>
+            <div class="footer-credits">
+              <span>Thought and developed by <strong>D SAM JERISH</strong></span>
+              <span>Produced by <strong>ROHIT KUMAR S</strong></span>
+            </div>
+            <p class="footer-disclaimer">
+              This website is developed by Sam Jerish D. As a student developer, I do my best to keep the notes accurate, but mistakes may occur.
+              If you spot one, please contact <a href="mailto:samjerish@karunya.edu.in">samjerish@karunya.edu.in</a>.
+            </p>
+          </footer>
+        </div>
+      </main>
+      <dialog id="subject-dialog" class="subject-dialog" aria-labelledby="subject-dialog-title">
+        <form id="subject-form">
+          <h2 id="subject-dialog-title">Add a subject</h2>
+          <p>Give your new subject a name.</p>
+          <label for="subject-name">Subject name</label>
+          <input id="subject-name" type="text" maxlength="60" autocomplete="off" required />
+          <div class="subject-dialog-actions">
+            <button id="subject-cancel" class="secondary-button" type="button">Cancel</button>
+            <button class="primary-button" type="submit">Add subject</button>
+          </div>
+        </form>
+      </dialog>
+      <dialog id="contribution-dialog" class="subject-dialog" aria-labelledby="contribution-dialog-title">
+        <form id="contribution-form">
+          <h2 id="contribution-dialog-title">Your Contribution</h2>
+          <p>Choose a subject and add a PDF. It is saved only in this browser.</p>
+          <label for="contribution-subject">Subject</label>
+          <select id="contribution-subject" required>
+            <option value="" disabled selected>Choose a subject</option>
+          </select>
+          <label for="contribution-file">PDF file</label>
+          <input id="contribution-file" class="contribution-file-input" type="file" accept="application/pdf,.pdf" required />
+          <div class="subject-dialog-actions">
+            <button id="contribution-cancel" class="secondary-button" type="button">Cancel</button>
+            <button class="primary-button" type="submit">Add contribution</button>
+          </div>
+        </form>
+      </dialog>
+      <dialog id="remove-subject-dialog" class="subject-dialog" aria-labelledby="remove-subject-title">
+        <div class="remove-subject-content">
+          <h2 id="remove-subject-title">Remove subject?</h2>
+          <p id="remove-subject-message">Its PDFs will be moved to Unassigned.</p>
+          <div class="subject-dialog-actions">
+            <button id="cancel-remove-subject" class="secondary-button" type="button">Keep subject</button>
+            <button id="confirm-remove-subject" class="danger-button" type="button">Remove subject</button>
+          </div>
+        </div>
+      </dialog>
+      <dialog id="file-assign-dialog" class="subject-dialog" aria-labelledby="file-assign-title">
+        <form id="file-assign-form">
+          <h2 id="file-assign-title">Add PDF to a subject</h2>
+          <p id="file-assign-name"></p>
+          <label for="file-assign-subject">Choose a subject</label>
+          <select id="file-assign-subject" required>
+            <option value="" disabled selected>Choose a subject</option>
+          </select>
+          <div class="subject-dialog-actions">
+            <button id="file-assign-cancel" class="secondary-button" type="button">Cancel</button>
+            <button class="primary-button" type="submit">Add to subject</button>
+          </div>
+        </form>
+      </dialog>
+      <dialog id="admin-code-dialog" class="subject-dialog" aria-labelledby="admin-code-title">
+        <form id="admin-code-form">
+          <h2 id="admin-code-title">Admin access required</h2>
+          <p id="admin-code-description">Enter the admin code to add PDFs to this section.</p>
+          <label for="admin-code-input">Admin code</label>
+          <input id="admin-code-input" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-describedby="admin-code-error" />
+          <p id="admin-code-error" class="admin-code-error" role="alert" hidden>Not allowed to add PDFs. Only admin can access.</p>
+          <div class="subject-dialog-actions">
+            <button id="admin-code-cancel" class="secondary-button" type="button">Cancel</button>
+            <button id="admin-code-submit" class="primary-button" type="submit">Verify &amp; add PDF</button>
+          </div>
+        </form>
+      </dialog>
+      <dialog id="admin-login-dialog" class="subject-dialog" aria-labelledby="admin-login-title">
+        <form id="admin-login-form">
+          <h2 id="admin-login-title">Admin sign in</h2>
+          <p>Use the configured Firebase admin account to continue.</p>
+          <label for="admin-login-email">Admin email</label>
+          <input id="admin-login-email" type="email" autocomplete="username" required />
+          <label for="admin-login-password">Password</label>
+          <input id="admin-login-password" type="password" autocomplete="current-password" required />
+          <p id="admin-login-error" class="admin-code-error" role="alert" hidden></p>
+          <div class="subject-dialog-actions">
+            <button id="admin-login-cancel" class="secondary-button" type="button">Cancel</button>
+            <button id="admin-login-submit" class="primary-button" type="submit">Sign in</button>
+          </div>
+        </form>
+      </dialog>
+      <dialog id="feedback-dialog" class="subject-dialog feedback-dialog" aria-labelledby="feedback-title">
+        <form id="feedback-form" action="https://formspree.io/f/mbgodyge" method="POST">
+          <h2 id="feedback-title">Your Feedback</h2>
+          <p class="feedback-notice">
+            This website is developed by Sam Jerish D. As a student developer, I do my best to keep the notes accurate, but mistakes may occur.
+            If you spot one, please contact <a href="mailto:samjerish@karunya.edu.in">samjerish@karunya.edu.in</a>.
+          </p>
+          <input type="hidden" name="_subject" value="Your Study Corner website feedback" />
+          <input type="hidden" name="developer_notice" value="Developed by Sam Jerish D. The notes may contain mistakes; contact samjerish@karunya.edu.in." />
+          <label for="feedback-name">Name</label>
+          <input id="feedback-name" name="name" type="text" autocomplete="name" maxlength="100" required />
+          <label for="feedback-comments">Comments</label>
+          <textarea id="feedback-comments" name="comments" rows="5" maxlength="3000" required></textarea>
+          <p id="feedback-error" class="feedback-error" role="alert" hidden></p>
+          <div class="subject-dialog-actions">
+            <button id="feedback-cancel" class="secondary-button" type="button">Cancel</button>
+            <button id="feedback-submit" class="primary-button" type="submit">Send feedback</button>
+          </div>
+        </form>
+      </dialog>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </div>
+    <script src="firebase-config.js"></script>
+    <script src="firebase-backend.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

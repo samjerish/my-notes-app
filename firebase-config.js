@@ -1,0 +1,9 @@
+window.STUDY_CORNER_FIREBASE_CONFIG = {
+  apiKey: "YOUR_FIREBASE_WEB_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  appId: "YOUR_FIREBASE_APP_ID",
+};
+
+window.STUDY_CORNER_ADMIN_EMAIL = "YOUR_ADMIN_EMAIL";

@@ -1,0 +1,35 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && request.auth.token.email == 'YOUR_ADMIN_EMAIL';
+    }
+
+    function validPdf() {
+      return request.resource != null
+        && request.resource.contentType == 'application/pdf'
+        && request.resource.size > 0
+        && request.resource.size <= 26214400;
+    }
+
+    match /pdfs/community/{userId}/{fileId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.auth.uid == userId
+        && validPdf();
+      allow update: if false;
+      allow delete: if isAdmin() || (signedIn() && request.auth.uid == userId);
+    }
+
+    match /pdfs/admin/{fileId} {
+      allow read: if signedIn();
+      allow create, update: if isAdmin() && validPdf();
+      allow delete: if isAdmin();
+    }
+  }
+}
