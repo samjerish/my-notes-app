@@ -1,5 +1,5 @@
 (function () {
-  const SDK_VERSION = "11.10.0";
+  const SDK_VERSION = "13.3.0";
   let backendPromise;
 
   function isConfigured(config) {
@@ -16,9 +16,6 @@
 
   async function createBackend(config, adminEmail) {
     if (!isConfigured(config)) return null;
-    if (typeof adminEmail !== "string" || !adminEmail.includes("@") || adminEmail.startsWith("YOUR_")) {
-      throw new Error("Set the admin email in firebase-config.js before connecting Firebase.");
-    }
     if (backendPromise) return backendPromise;
 
     backendPromise = (async () => {
@@ -55,6 +52,11 @@
           && currentUser.email.toLocaleLowerCase() === adminEmail.toLocaleLowerCase(),
         );
       };
+      const isAdminConfigured = () => (
+        typeof adminEmail === "string"
+        && adminEmail.includes("@")
+        && !adminEmail.startsWith("YOUR_")
+      );
 
       const getAllFiles = async () => {
         if (!auth.currentUser) return [];
@@ -115,10 +117,14 @@
       return {
         auth,
         isAdmin,
+        isAdminConfigured,
         signInStudent: async () => {
           if (!auth.currentUser) await authSdk.signInAnonymously(auth);
         },
         signInAdmin: async (email, password) => {
+          if (!isAdminConfigured()) {
+            throw new Error("Set the admin email in firebase-config.js and Firebase rules first.");
+          }
           await authSdk.signInWithEmailAndPassword(auth, email, password);
           if (!isAdmin()) {
             await authSdk.signOut(auth);

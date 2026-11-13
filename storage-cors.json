@@ -1,8 +1,8 @@
 [
   {
     "origin": [
-      "https://YOUR_PROJECT_ID.web.app",
-      "https://YOUR_PROJECT_ID.firebaseapp.com"
+      "https://notes-app-25197.web.app",
+      "https://notes-app-25197.firebaseapp.com"
     ],
     "method": ["GET", "HEAD"],
     "responseHeader": ["Content-Type", "Authorization"],

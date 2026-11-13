@@ -155,10 +155,13 @@ function showBackendStatus(message, isError = false) {
 
 function updateAdminMenu() {
   const isAdmin = Boolean(cloudBackend?.isAdmin());
+  const adminIsConfigured = Boolean(cloudBackend?.isAdminConfigured());
   const adminButton = document.querySelector("#admin-login-button");
   adminButton.hidden = !cloudBackend;
-  adminButton.textContent = isAdmin ? "Admin account active" : "Admin sign in";
-  adminButton.disabled = isAdmin;
+  adminButton.textContent = isAdmin
+    ? "Admin account active"
+    : adminIsConfigured ? "Admin sign in" : "Admin setup required";
+  adminButton.disabled = isAdmin || !adminIsConfigured;
   document.querySelector("#publish-local-library-button").hidden = !isAdmin;
 }
 
@@ -626,6 +629,11 @@ document.querySelector("#admin-code-form").addEventListener("submit", (event) =>
   }
 
   if (cloudBackend && !cloudBackend.isAdmin()) {
+    if (!cloudBackend.isAdminConfigured()) {
+      errorMessage.textContent = "Admin email is not configured. Set it in firebase-config.js and Firebase rules.";
+      errorMessage.hidden = false;
+      return;
+    }
     preserveAdminRequestOnCodeClose = true;
     document.querySelector("#admin-code-dialog").close();
     openAdminLoginDialog();
