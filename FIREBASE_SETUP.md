@@ -7,7 +7,7 @@ The Firebase web-app configuration is in place for project `notes-app-25197`. Au
 1. Open the Firebase project `notes-app-25197` in the [Firebase Console](https://console.firebase.google.com/).
 2. The configured admin email is `sf920336@gmail.com`; the app and Firestore rules are configured for this address.
 3. **Authentication → Sign-in method** has **Anonymous** and **Email/Password** enabled.
-4. Create an Email/Password admin account for that email under **Authentication → Users**. Set its password privately in Firebase Console; do not share it in chat or commit it.
+4. Create an Email/Password admin account for that email under **Authentication → Users**. Set its password privately in Firebase Console; do not share it in chat or commit it. The admin must verify the email address before using admin functions; the app sends a verification link on the first sign-in if needed.
 5. Cloud Firestore is already created in `asia-south1` (Mumbai).
 
 The Firebase Web API key and web-app config are intended to be present in browser code. Never put a Firebase Admin SDK private key or service-account JSON in this folder.

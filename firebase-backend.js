@@ -47,6 +47,7 @@
         const currentUser = auth.currentUser;
         return Boolean(
           currentUser
+          && currentUser.emailVerified
           && currentUser.email
           && adminEmail
           && currentUser.email.toLocaleLowerCase() === adminEmail.toLocaleLowerCase(),
@@ -179,6 +180,15 @@
             throw new Error("Set the admin email in firebase-config.js and Firebase rules first.");
           }
           await authSdk.signInWithEmailAndPassword(auth, email, password);
+          const currentUser = auth.currentUser;
+          if (currentUser?.email
+            && currentUser.email.toLocaleLowerCase() === adminEmail.toLocaleLowerCase()
+            && !currentUser.emailVerified) {
+            await authSdk.sendEmailVerification(currentUser);
+            await authSdk.signOut(auth);
+            await authSdk.signInAnonymously(auth);
+            throw new Error("Check your email to verify the admin account, then sign in again.");
+          }
           if (!isAdmin()) {
             await authSdk.signOut(auth);
             await authSdk.signInAnonymously(auth);
