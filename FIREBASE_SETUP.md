@@ -1,6 +1,6 @@
 # Firebase setup and deployment
 
-The Firebase web-app configuration is in place for project `notes-app-25197`. Authentication and Cloud Firestore are enabled; Firestore is in `asia-south1` (Mumbai). The app stores shared PDF bytes in Firestore chunks, avoiding the Cloud Storage Blaze-plan requirement. The Firestore rules and site still need to be deployed over HTTPS. Local PDFs are not automatically uploaded.
+The Firebase web-app configuration is in place for project `notes-app-25197`. Authentication and Cloud Firestore are enabled; Firestore is in `asia-south1` (Mumbai). The hosted app at https://notes-app-25197.web.app stores shared PDF bytes in Firestore chunks, avoiding the Cloud Storage Blaze-plan requirement. The app listens for Firestore changes in real time, so shared PDFs and subjects update automatically for signed-in users. PDFs added to **Your Contribution** from any signed-in device are uploaded to the shared library. PDFs saved only in a browser's local library must still be published by the admin.
 
 ## 1. Firebase services and admin account
 
@@ -34,7 +34,7 @@ Firebase Hosting provides a public `web.app` address after deployment. Add a cus
 ## 4. Admin and shared-library behavior
 
 - Students enter their name and batch as before. Firebase Anonymous Authentication gives each browser a signed-in identity; the shared library is available across devices, but name/batch profiles are not recoverable accounts.
-- Anyone signed in can read shared PDFs and upload a contribution. Contributions are immediately visible to all signed-in users.
+- Anyone signed in on the hosted site can read shared PDFs and upload a contribution. Firestore listeners deliver completed uploads and subject changes to other signed-in devices automatically; devices need an internet connection and the hosted HTTPS site.
 - Revision and Handwritten uploads, subject changes, and publishing a device's existing local PDFs require the configured admin email account, in addition to the existing code prompt.
 - The code prompt is only a user-interface check. Firestore rules enforce admin access.
 - The admin can use **Admin sign in** in the profile menu. The admin account must use the configured email.
