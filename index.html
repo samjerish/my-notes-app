@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#f6f7f2" />
     <title>Your Study Corner — your notes, in order</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -128,7 +128,7 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg>
                 Add PDF
               </button>
-              <input id="file-input" type="file" accept="application/pdf,.pdf" multiple hidden />
+              <input id="file-input" type="file" accept="application/pdf,application/x-pdf,.pdf" multiple hidden />
             </section>
 
             <section id="section-grid" class="section-grid" aria-label="Subject sections">
@@ -224,7 +224,8 @@
             <option value="" disabled selected>Choose a subject</option>
           </select>
           <label for="contribution-file">PDF file</label>
-          <input id="contribution-file" class="contribution-file-input" type="file" accept="application/pdf,.pdf" required />
+          <input id="contribution-file" class="contribution-file-input" type="file" accept="application/pdf,application/x-pdf,.pdf" required />
+          <p class="upload-mobile-hint">On phones, choose a PDF from Files, Downloads, or Drive. Maximum size: 25 MiB.</p>
           <div id="contribution-upload-progress" class="upload-progress upload-progress-inline" role="status" aria-live="polite" hidden>
             <div class="upload-progress-heading">
               <span class="upload-progress-label">Uploading PDF</span>
@@ -319,8 +320,8 @@
         </div>
       </form>
     </dialog>
-    <script src="firebase-config.js?v=20261114-upload-progress-v6"></script>
-    <script src="firebase-backend.js?v=20261114-upload-progress-v6"></script>
-    <script src="app.js?v=20261114-upload-progress-v6"></script>
+    <script src="firebase-config.js?v=20261114-mobile-upload-v7"></script>
+    <script src="firebase-backend.js?v=20261114-mobile-upload-v7"></script>
+    <script src="app.js?v=20261114-mobile-upload-v7"></script>
   </body>
 </html>

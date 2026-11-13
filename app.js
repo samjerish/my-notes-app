@@ -588,6 +588,11 @@ function requestFileUpload() {
     return;
   }
 
+  if (authorizedAdminUploadSection === state.section) {
+    openFilePicker(state.section);
+    return;
+  }
+
   openAdminCodeDialog({ type: "upload", section: state.section });
 }
 
@@ -619,7 +624,7 @@ function openAdminCodeDialog(request) {
   adminCodeInput.focus();
 }
 
-function continueAdminRequest(request) {
+function continueAdminRequest(request, options = {}) {
   if (request?.type === "subject") {
     subjectInput.value = "";
     subjectDialog.showModal();
@@ -643,6 +648,10 @@ function continueAdminRequest(request) {
     return;
   }
   authorizedAdminUploadSection = request.section;
+  if (options.deferFilePicker) {
+    showToast("Admin access confirmed. Tap Add PDF again to choose a file.");
+    return;
+  }
   openFilePicker(request.section);
 }
 
@@ -735,6 +744,10 @@ document.querySelector("#admin-login-form").addEventListener("submit", async (ev
   pendingAdminRequest = null;
   document.querySelector("#admin-login-dialog").close();
   showLibrary(ADMIN_PROFILE);
+  if (request?.type === "upload") {
+    state.view = "subject";
+    state.section = request.section;
+  }
   updateAdminMenu();
   startWatchingCloudLibrary();
   try {
@@ -752,8 +765,8 @@ document.querySelector("#admin-login-form").addEventListener("submit", async (ev
     console.error("Could not render the shared library after admin sign-in:", error);
     showToast("Admin signed in, but the shared library could not be displayed.", true);
   }
-  if (request) continueAdminRequest(request);
-  showToast("Admin access confirmed.");
+  if (request) continueAdminRequest(request, { deferFilePicker: true });
+  if (request?.type !== "upload") showToast("Admin access confirmed.");
   submitButton.disabled = false;
 });
 fileInput.addEventListener("change", async (event) => {
