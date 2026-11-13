@@ -381,3 +381,17 @@ h1 span { color: var(--green-dark); }
 @media (max-width: 480px) {
   .cloud-mode-notice { margin-top: 10px; font-size: 9px; }
 }
+
+@media (max-width: 680px) {
+  .topbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px 12px; padding: 10px 4%; }
+  .topbar .brand { grid-column: 1; grid-row: 1; }
+  .topbar .profile-control { grid-column: 2; grid-row: 1; }
+  .topbar-actions { width: 100%; display: grid; grid-column: 1 / -1; grid-row: 2; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
+  .topbar-actions > button { min-width: 0; min-height: 44px; display: flex; align-items: center; justify-content: center; margin: 0; padding: 6px; font-size: 11px; line-height: 1.2; text-align: center; white-space: normal; }
+  .topbar-actions > .contribute-open-button, .topbar-actions > .feedback-open-button { height: auto; min-height: 44px; padding: 6px; font-size: 11px; }
+}
+
+@media (max-width: 360px) {
+  .topbar-actions { gap: 5px; }
+  .topbar-actions > button { padding: 5px 3px; font-size: 10px; }
+}
