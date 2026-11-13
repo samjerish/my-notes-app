@@ -2,10 +2,12 @@ const DB_NAME = "study-shelf";
 const STORE_NAME = "pdfs";
 const PROFILE_KEY = "study-shelf-profile";
 const SUBJECTS_KEY = "study-shelf-subjects";
+const THEME_KEY = "study-shelf-theme";
 const ADMIN_UPLOAD_CODE = "7061";
 const ADMIN_PROFILE = { name: "Sam", batch: "3" };
 const UNASSIGNED_SUBJECT = "Unassigned";
 const CONTRIBUTION_SECTION = "contributed";
+const EXAM_PAPERS_SECTION = "exam-papers";
 const BUNDLED_REVISION_FILES = [
   "modelquestions.pdf",
   "REVISION1.pdf",
@@ -40,6 +42,39 @@ const emptyState = document.querySelector("#empty-state");
 const shareDialog = document.querySelector("#share-dialog");
 const shareWhatsAppButton = document.querySelector("#share-whatsapp-button");
 const shareDownloadButton = document.querySelector("#share-download-button");
+const themeToggles = document.querySelectorAll(".theme-toggle");
+
+function setTheme(theme) {
+  const isDark = theme === "dark";
+  document.documentElement.dataset.theme = isDark ? "dark" : "light";
+  themeToggles.forEach((toggle) => {
+    toggle.setAttribute("aria-label", `Switch to ${isDark ? "light" : "dark"} mode`);
+    toggle.setAttribute("aria-pressed", String(isDark));
+    toggle.title = `Switch to ${isDark ? "light" : "dark"} mode`;
+  });
+  document.querySelector('meta[name="theme-color"]').content = isDark ? "#151c17" : "#f6f7f2";
+}
+
+let savedTheme = "light";
+try {
+  savedTheme = localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light";
+} catch (error) {
+  console.error("Could not read the saved theme preference:", error);
+}
+setTheme(savedTheme);
+
+themeToggles.forEach((toggle) => {
+  toggle.addEventListener("click", () => {
+    const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    try {
+      localStorage.setItem(THEME_KEY, nextTheme);
+    } catch (error) {
+      console.error("Could not save the theme preference:", error);
+      showToast("Theme changed, but your preference couldn't be saved.", true);
+    }
+  });
+});
 
 function openDatabase() {
   return new Promise((resolve, reject) => {
@@ -260,7 +295,7 @@ function makeFileRow(file) {
   row.innerHTML = `
     <span class="pdf-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4 4v13H7a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2Z"/><path d="M14 4v4h4M8.5 15.5h7"/></svg></span>
     <span class="file-copy"><strong title="${escapeHTML(file.name)}">${escapeHTML(file.name)}</strong><span>${formatSize(file.size)} · Added ${formatDate(file.createdAt)}</span></span>
-    <span class="file-label ${file.section === "notes" ? "notes-label" : ""}">${file.section === CONTRIBUTION_SECTION ? "Contributed" : file.section === "notes" ? "Handwritten" : "Revision"}</span>
+    <span class="file-label ${file.section === "notes" ? "notes-label" : ""}">${file.section === CONTRIBUTION_SECTION ? "Contributed" : file.section === "notes" ? "Handwritten" : file.section === EXAM_PAPERS_SECTION ? "Exam Paper" : "Revision"}</span>
     <span class="file-actions">
       <button class="file-action" type="button" data-action="download" aria-label="Download ${escapeHTML(file.name)}" title="Download">${iconMarkup("download")}</button>
       <button class="file-action" type="button" data-action="share" aria-label="Share ${escapeHTML(file.name)}" title="Share">${iconMarkup("share")}</button>
@@ -494,6 +529,7 @@ async function render() {
   document.querySelector("#library-view").hidden = state.view !== "library";
   document.querySelector("#subject-view").hidden = state.view !== "subject";
   const isUnassigned = state.subject === UNASSIGNED_SUBJECT;
+  const isExamPapers = state.section === EXAM_PAPERS_SECTION;
   document.querySelector("#section-grid").hidden = isUnassigned;
   document.querySelector("#upload-button").hidden = isUnassigned || adminOnlyUploadHidden;
   document.querySelector("#subject-description").hidden = isUnassigned;
@@ -513,10 +549,11 @@ async function render() {
   const revisionFiles = subjectFiles.filter((file) => file.section === "revision");
   const noteFiles = subjectFiles.filter((file) => file.section === "notes");
   const contributedFiles = subjectFiles.filter((file) => file.section === CONTRIBUTION_SECTION);
+  const examPaperFiles = subjectFiles.filter((file) => file.section === EXAM_PAPERS_SECTION);
   document.querySelector("#revision-count").textContent = revisionFiles.length;
   document.querySelector("#notes-count").textContent = noteFiles.length;
-
   document.querySelector("#contributed-count").textContent = contributedFiles.length;
+  document.querySelector("#exam-papers-count").textContent = examPaperFiles.length;
   document.querySelector("#subject-heading").textContent = state.subject;
   document.querySelector("#subject-description").textContent = state.subject === "TOC"
     ? "Theory of Computation · Your notes & revision material"
@@ -525,14 +562,16 @@ async function render() {
     : `${state.subject} · Your notes & revision material`;
   const visibleFiles = isUnassigned ? subjectFiles : state.section === "notes"
     ? noteFiles
-    : state.section === CONTRIBUTION_SECTION ? contributedFiles : revisionFiles;
+    : state.section === CONTRIBUTION_SECTION ? contributedFiles
+    : isExamPapers ? examPaperFiles : revisionFiles;
   const sectionFiles = visibleFiles
     .sort((a, b) => state.sortOldest ? a.createdAt - b.createdAt : b.createdAt - a.createdAt);
   document.querySelector("#files-title").textContent = isUnassigned
     ? "Unassigned PDFs"
     : state.section === "notes"
     ? "Handwritten notes"
-    : state.section === CONTRIBUTION_SECTION ? "Contributed PDFs" : "Revision PDFs";
+    : state.section === CONTRIBUTION_SECTION ? "Contributed PDFs"
+    : isExamPapers ? "Exam Papers" : "Revision PDFs";
   document.querySelector("#files-subtitle").textContent = isUnassigned
     ? "Choose a subject for each PDF to add it to your library."
     : state.section === "notes"
@@ -541,13 +580,15 @@ async function render() {
     ? cloudBackend?.auth.currentUser
       ? "Community PDFs shared with all signed-in users."
       : "PDFs contributed in this browser."
+    : isExamPapers
+    ? "Community-uploaded Internals and previous year question papers (PYQs)."
     : "Admin-only uploads · A tidy place for your last-minute refreshers.";
   document.querySelector("#files-total").textContent = sectionFiles.length;
-  document.querySelector("#empty-section-name").textContent = isUnassigned
-    ? "unassigned"
-    : state.section === "notes"
-    ? "handwritten notes"
-    : state.section === CONTRIBUTION_SECTION ? "contributed" : "revision";
+  document.querySelector("#empty-state-description").textContent = isUnassigned
+    ? "No PDFs are currently assigned to a subject."
+    : isExamPapers
+    ? "Add Internals and previous year question papers (PYQs) here for everyone to access."
+    : `Your ${state.section === "notes" ? "handwritten notes" : state.section === CONTRIBUTION_SECTION ? "contributed" : "revision"} material will feel right at home here. Drop in a PDF to get started.`;
   document.querySelector("#sort-button").lastChild.textContent = state.sortOldest ? "Oldest first" : "Newest first";
   fileList.replaceChildren(...sectionFiles.map(makeFileRow));
   emptyState.hidden = sectionFiles.length > 0;
@@ -576,7 +617,8 @@ async function addSelectedFiles(files, section = state.section) {
     finishUploadProgress();
     const sectionName = section === "notes"
       ? "Handwritten notes"
-      : section === CONTRIBUTION_SECTION ? "Contributed PDFs" : "Revision PDFs";
+      : section === CONTRIBUTION_SECTION ? "Contributed PDFs"
+      : section === EXAM_PAPERS_SECTION ? "Exam Papers" : "Revision PDFs";
     showToast(`${pdfs.length} PDF${pdfs.length === 1 ? "" : "s"} added to ${sectionName}.`);
   } catch (error) {
     hideUploadProgress();

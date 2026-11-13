@@ -11,7 +11,7 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=20261114-dark-mode-v9" />
   </head>
   <body>
     <main id="login-screen" class="login-screen">
@@ -27,6 +27,10 @@
           <span class="brand-developer">Developed by D Sam Jerish</span>
         </span>
       </a>
+      <button class="theme-toggle login-theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode">
+        <svg class="moon-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 15.1A8.5 8.5 0 0 1 8.9 3.8 8.5 8.5 0 1 0 20.2 15.1Z"/></svg>
+        <svg class="sun-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
+      </button>
       <section class="login-card">
         <div class="login-art" aria-hidden="true">
           <span class="login-art-page"></span>
@@ -71,6 +75,10 @@
           <button id="feedback-open-button" class="secondary-button feedback-open-button" type="button">Your Feedback</button>
         </div>
         <div class="profile-control">
+          <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode">
+            <svg class="moon-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 15.1A8.5 8.5 0 0 1 8.9 3.8 8.5 8.5 0 1 0 20.2 15.1Z"/></svg>
+            <svg class="sun-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
+          </button>
           <button type="button" class="avatar top-avatar" aria-label="Your profile" aria-expanded="false" aria-controls="profile-menu">S</button>
           <div id="profile-menu" class="profile-menu" hidden>
             <strong id="profile-name">My profile</strong>
@@ -132,7 +140,7 @@
             </section>
 
             <section id="section-grid" class="section-grid" aria-label="Subject sections">
-              <button class="section-card revision-card active-section" type="button" data-section="revision">
+              <button class="section-card revision-card" type="button" data-section="revision">
                 <span class="section-icon revision-icon">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.8h7l4 4v12.4H7a2 2 0 0 1-2-2V5.8a2 2 0 0 1 2-2Z"/><path d="M14 4v4h4M8.5 12h7m-7 3.5h7"/></svg>
                 </span>
@@ -162,6 +170,14 @@
                 <span class="section-count" id="contributed-count">0</span>
                 <span class="section-arrow">↗</span>
               </button>
+              <button class="section-card exam-papers-card" type="button" data-section="exam-papers">
+                <span class="section-icon exam-papers-icon">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.8h7l4 4v12.4H7a2 2 0 0 1-2-2V5.8a2 2 0 0 1 2-2Z"/><path d="M14 4v4h4M8.5 12h7m-7 3.5h7"/></svg>
+                </span>
+                <span class="section-info"><strong>Exam Papers</strong><span>Internals and PYQs</span></span>
+                <span class="section-count" id="exam-papers-count">0</span>
+                <span class="section-arrow">↗</span>
+              </button>
             </section>
 
             <section class="files-section">
@@ -183,7 +199,7 @@
                   <div class="empty-sparkle sparkle-two">✦</div>
                 </div>
                 <h3>No PDFs here just yet</h3>
-                <p>Your <span id="empty-section-name">revision</span> material will feel right at home here.<br />Drop in a PDF to get started.</p>
+                <p id="empty-state-description">Your revision material will feel right at home here. Drop in a PDF to get started.</p>
                 <button id="empty-upload-button" class="secondary-button" type="button"><span>＋</span> Add your first PDF</button>
               </div>
             </section>
@@ -346,6 +362,6 @@
     </dialog>
     <script src="firebase-config.js?v=20261114-whatsapp-share-v8"></script>
     <script src="firebase-backend.js?v=20261114-whatsapp-share-v8"></script>
-    <script src="app.js?v=20261114-whatsapp-share-v8"></script>
+    <script src="app.js?v=20261114-dark-mode-v9"></script>
   </body>
 </html>

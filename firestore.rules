@@ -24,7 +24,7 @@ service cloud.firestore {
         && request.resource.data.size > 0
         && request.resource.data.size <= 26214400
         && request.resource.data.subject is string
-        && request.resource.data.section in ['revision', 'notes', 'contributed']
+        && request.resource.data.section in ['revision', 'notes', 'contributed', 'exam-papers']
         && request.resource.data.createdAt is int
         && request.resource.data.chunkCount is int
         && request.resource.data.chunkCount > 0
@@ -44,14 +44,14 @@ service cloud.firestore {
         && request.resource.data.index < pdf.data.chunkCount
         && request.resource.data.content is bytes
         && request.resource.data.uploadedBy == request.auth.uid
-        && (pdf.data.section == 'contributed' || isAdmin());
+        && (pdf.data.section in ['contributed', 'exam-papers'] || isAdmin());
     }
 
     function canDeletePdfChunk(pdfId) {
       let pdf = pdfReference(pdfId);
       return isAdmin()
         || (signedIn()
-          && pdf.data.section == 'contributed'
+          && pdf.data.section in ['contributed', 'exam-papers']
           && pdf.data.uploadedBy == request.auth.uid
           && pdf.data.uploadStatus == 'uploading'
           && resource.data.uploadedBy == request.auth.uid);
@@ -73,12 +73,12 @@ service cloud.firestore {
           'createdAt', 'uploadedBy', 'chunkCount', 'uploadStatus'
         ])
         && (
-          request.resource.data.section == 'contributed'
+          request.resource.data.section in ['contributed', 'exam-papers']
           || (isAdmin() && request.resource.data.section in ['revision', 'notes'])
         );
       allow update: if isAdmin()
         || (signedIn()
-          && resource.data.section == 'contributed'
+          && resource.data.section in ['contributed', 'exam-papers']
           && resource.data.uploadedBy == request.auth.uid
           && request.resource.data.uploadedBy == resource.data.uploadedBy
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['uploadStatus'])
@@ -86,7 +86,7 @@ service cloud.firestore {
           && request.resource.data.uploadStatus == 'ready');
       allow delete: if isAdmin()
         || (signedIn()
-          && resource.data.section == 'contributed'
+          && resource.data.section in ['contributed', 'exam-papers']
           && resource.data.uploadedBy == request.auth.uid
           && resource.data.uploadStatus == 'uploading');
 
