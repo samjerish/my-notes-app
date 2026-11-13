@@ -392,14 +392,16 @@ async function render() {
     subject,
     allFiles.filter((file) => file.subject === subject).length,
   ]));
+  const isAdmin = Boolean(cloudBackend?.isAdmin());
+  const adminOnlyUploadHidden = isAdminOnlySection(state.section) && !isAdmin;
   document.querySelector("#library-view").hidden = state.view !== "library";
   document.querySelector("#subject-view").hidden = state.view !== "subject";
   const isUnassigned = state.subject === UNASSIGNED_SUBJECT;
   document.querySelector("#section-grid").hidden = isUnassigned;
-  document.querySelector("#upload-button").hidden = isUnassigned;
+  document.querySelector("#upload-button").hidden = isUnassigned || adminOnlyUploadHidden;
   document.querySelector("#subject-description").hidden = isUnassigned;
   document.querySelector("#sort-button").hidden = isUnassigned;
-  document.querySelector("#empty-upload-button").hidden = isUnassigned;
+  document.querySelector("#empty-upload-button").hidden = isUnassigned || adminOnlyUploadHidden;
   document.querySelector("#subject-list").replaceChildren(
     ...displaySubjects.map((subject) => makeSubjectCard(subject, subjectCounts.get(subject))),
   );
@@ -690,10 +692,18 @@ document.querySelector("#admin-login-form").addEventListener("submit", async (ev
   startWatchingCloudLibrary();
   try {
     const sharedSubjects = await refreshCloudSubjects();
-    if (sharedSubjects) await render();
+    if (!sharedSubjects) {
+      showBackendStatus("The shared subject list is not set up yet. Admin sign-in is required.", true);
+    }
   } catch (error) {
     console.error("Could not load the shared library after admin sign-in:", error);
     showToast("Admin signed in, but the shared library could not be refreshed.", true);
+  }
+  try {
+    await render();
+  } catch (error) {
+    console.error("Could not render the shared library after admin sign-in:", error);
+    showToast("Admin signed in, but the shared library could not be displayed.", true);
   }
   if (request) continueAdminRequest(request);
   showToast("Admin access confirmed.");
