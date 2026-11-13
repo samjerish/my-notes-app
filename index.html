@@ -268,21 +268,6 @@
           </div>
         </form>
       </dialog>
-      <dialog id="admin-login-dialog" class="subject-dialog" aria-labelledby="admin-login-title">
-        <form id="admin-login-form">
-          <h2 id="admin-login-title">Admin sign in</h2>
-          <p>Use the configured Firebase admin account to continue.</p>
-          <label for="admin-login-email">Admin email</label>
-          <input id="admin-login-email" type="email" autocomplete="username" required />
-          <label for="admin-login-password">Password</label>
-          <input id="admin-login-password" type="password" autocomplete="current-password" required />
-          <p id="admin-login-error" class="admin-code-error" role="alert" hidden></p>
-          <div class="subject-dialog-actions">
-            <button id="admin-login-cancel" class="secondary-button" type="button">Cancel</button>
-            <button id="admin-login-submit" class="primary-button" type="submit">Sign in</button>
-          </div>
-        </form>
-      </dialog>
       <dialog id="feedback-dialog" class="subject-dialog feedback-dialog" aria-labelledby="feedback-title">
         <form id="feedback-form" action="https://formspree.io/f/mbgodyge" method="POST">
           <h2 id="feedback-title">Your Feedback</h2>
@@ -305,8 +290,23 @@
       </dialog>
       <div id="toast" class="toast" role="status" aria-live="polite"></div>
     </div>
-    <script src="firebase-config.js?v=20261114-admin-roles-v3"></script>
-    <script src="firebase-backend.js?v=20261114-admin-roles-v3"></script>
-    <script src="app.js?v=20261114-admin-roles-v3"></script>
+    <dialog id="admin-login-dialog" class="subject-dialog" aria-labelledby="admin-login-title">
+      <form id="admin-login-form">
+        <h2 id="admin-login-title">Admin sign in</h2>
+        <p>Use the verified Firebase admin email and password—not the student name and batch. Admin profile: Sam, batch 3.</p>
+        <label for="admin-login-email">Admin email</label>
+        <input id="admin-login-email" type="email" autocomplete="username" required />
+        <label for="admin-login-password">Password</label>
+        <input id="admin-login-password" type="password" autocomplete="current-password" required />
+        <p id="admin-login-error" class="admin-code-error" role="alert" hidden></p>
+        <div class="subject-dialog-actions">
+          <button id="admin-login-cancel" class="secondary-button" type="button">Cancel</button>
+          <button id="admin-login-submit" class="primary-button" type="submit">Sign in</button>
+        </div>
+      </form>
+    </dialog>
+    <script src="firebase-config.js?v=20261114-admin-login-v5"></script>
+    <script src="firebase-backend.js?v=20261114-admin-login-v5"></script>
+    <script src="app.js?v=20261114-admin-login-v5"></script>
   </body>
 </html>

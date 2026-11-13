@@ -605,8 +605,11 @@ function continueAdminRequest(request) {
 function openAdminLoginDialog() {
   document.querySelector("#admin-login-form").reset();
   document.querySelector("#admin-login-error").hidden = true;
+  const emailInput = document.querySelector("#admin-login-email");
+  emailInput.value = window.STUDY_CORNER_ADMIN_EMAIL || "";
   document.querySelector("#admin-login-dialog").showModal();
-  document.querySelector("#admin-login-email").focus();
+  if (emailInput.value) document.querySelector("#admin-login-password").focus();
+  else emailInput.focus();
 }
 
 document.querySelector("#upload-button").addEventListener("click", requestFileUpload);

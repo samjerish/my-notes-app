@@ -38,7 +38,7 @@ Firebase Hosting provides a public `web.app` address after deployment. Add a cus
 - Only the verified admin account (`sf920336@gmail.com`) sees subject add/remove controls and can add Revision or Handwritten PDFs. The admin profile displays as Sam, batch 3. Admin-only actions also require the existing code prompt.
 - Normal users do not see subject add/remove or PDF delete controls. They can contribute PDFs and send feedback. A contributor may not delete or reassign a published contribution; the admin can manage shared PDFs.
 - The code prompt is only a user-interface check. Firestore rules enforce admin access.
-- The admin can use **Admin sign in** in the profile menu. The admin account must use the configured email.
+- The admin can use **Admin sign in** in the profile menu after entering the library. This uses the verified Firebase admin email/password, not the student name/batch fields; after sign-in, the profile displays Sam, batch 3.
 - To share PDFs already stored in this browser, sign in as admin, use **Publish this device's PDFs**, review the confirmation, and approve. Local copies remain in this browser. This action can publish the current local subjects and PDFs.
 
 ## 5. Firestore PDF storage and limits
