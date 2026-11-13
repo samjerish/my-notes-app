@@ -245,7 +245,7 @@
             || chunks.some((chunk, index) => chunk.index !== index)) {
             throw new Error("This PDF is incomplete in the shared library. Ask the admin to publish it again.");
           }
-          const parts = chunks.map((chunk) => firestoreSdk.Bytes.toUint8Array(chunk.content));
+          const parts = chunks.map((chunk) => chunk.content.toUint8Array());
           if (parts.reduce((size, part) => size + part.byteLength, 0) !== file.size) {
             throw new Error("This PDF failed its size check. Ask the admin to publish it again.");
           }
