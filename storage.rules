@@ -7,7 +7,7 @@ service firebase.storage {
 
     function isAdmin() {
       return signedIn()
-        && request.auth.token.email == 'YOUR_ADMIN_EMAIL';
+        && request.auth.token.email == 'sf920336@gmail.com';
     }
 
     function validPdf() {

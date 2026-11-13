@@ -5,7 +5,7 @@ The Firebase web-app configuration is in place for project `notes-app-25197`. Cl
 ## 1. Enable Firebase services
 
 1. Open the Firebase project `notes-app-25197` in the [Firebase Console](https://console.firebase.google.com/).
-2. Replace `YOUR_ADMIN_EMAIL` in `firebase-config.js`, `firestore.rules`, and `storage.rules` with the lowercase email used by the admin Firebase account.
+2. The configured admin email is `sf920336@gmail.com`; use this email when creating the admin account in Authentication. The app and security rules are already configured for it.
 3. In **Authentication → Sign-in method**, enable **Anonymous** and **Email/Password**.
 4. In **Authentication → Users**, create the admin email/password account.
 5. Create a Cloud Firestore database and a Cloud Storage bucket.
@@ -39,7 +39,6 @@ Firebase Hosting provides a public `web.app` address after deployment. Add a cus
 - Revision and Handwritten uploads, subject changes, and publishing a device's existing local PDFs require the configured admin email account, in addition to the existing code prompt.
 - The code prompt is only a user-interface check. Firestore and Storage rules enforce admin access.
 - The admin can use **Admin sign in** in the profile menu. The admin account must use the configured email.
-- Admin actions remain disabled until the admin email is supplied and placed in both Firebase rules files.
 - To share PDFs already stored in this browser, sign in as admin, use **Publish this device's PDFs**, review the confirmation, and approve. Local copies remain in this browser. This action can publish the current local subjects and PDFs.
 
 ## 5. Storage and limits

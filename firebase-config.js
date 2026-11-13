@@ -8,4 +8,4 @@ window.STUDY_CORNER_FIREBASE_CONFIG = {
   measurementId: "G-LQFHSGBYRK",
 };
 
-window.STUDY_CORNER_ADMIN_EMAIL = "YOUR_ADMIN_EMAIL";
+window.STUDY_CORNER_ADMIN_EMAIL = "sf920336@gmail.com";
