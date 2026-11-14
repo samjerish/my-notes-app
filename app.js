@@ -262,9 +262,13 @@ function startWatchingCloudLibrary() {
   stopWatchingCloudLibrary();
   if (!cloudBackend?.auth.currentUser) return;
 
+  const reportSyncError = (error, resource = "shared library") => {
+    console.error(`Could not sync ${resource}:`, error);
+    showBackendStatus(`Could not sync ${resource}. ${error.message || ""}`, true);
+  };
   const reportRenderError = (error) => {
     console.error("Could not render a shared-library update:", error);
-    showBackendStatus(`Could not refresh the shared library. ${error.message || ""}`, true);
+    showBackendStatus(`Could not display a shared-library update. ${error.message || ""}`, true);
   };
   stopCloudSubscriptions = cloudBackend.watchLibrary(
     (files) => {
@@ -289,7 +293,7 @@ function startWatchingCloudLibrary() {
       sharedPortionEntries = entries;
       render().catch(reportRenderError);
     },
-    reportRenderError,
+    reportSyncError,
   );
 }
 

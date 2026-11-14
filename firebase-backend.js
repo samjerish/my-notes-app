@@ -253,6 +253,7 @@
         getAllFiles,
         watchLibrary: (onFiles, onSubjects, onPortionEntries, onError) => {
           if (!auth.currentUser) throw new Error("Sign in before syncing the shared library.");
+          const reportSyncError = (resource) => (error) => onError(error, resource);
           const stopFiles = firestoreSdk.onSnapshot(
             firestoreSdk.collection(database, "pdfs"),
             (snapshot) => onFiles(
@@ -260,19 +261,19 @@
                 .map((item) => ({ id: item.id, ...item.data() }))
                 .filter((file) => file.uploadStatus !== "uploading"),
             ),
-            onError,
+            reportSyncError("PDFs"),
           );
           const stopSubjects = firestoreSdk.onSnapshot(
             firestoreSdk.doc(database, "settings", "library"),
             (snapshot) => onSubjects(snapshot.exists() ? snapshot.data().subjects : null),
-            onError,
+            reportSyncError("subjects"),
           );
           const stopPortionEntries = firestoreSdk.onSnapshot(
             firestoreSdk.collection(database, "portionEntries"),
             (snapshot) => onPortionEntries(
               snapshot.docs.map((item) => ({ id: item.id, ...item.data() })),
             ),
-            onError,
+            reportSyncError("portion topics"),
           );
           return () => {
             stopFiles();
