@@ -166,11 +166,29 @@ h1 span { color: var(--green-dark); }
 .portion-modules-heading { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
 .portion-modules-heading h3 { margin: 0; color: #35433a; font: 700 13px "Manrope", sans-serif; }
 .portion-modules-heading span { color: #959d96; font-size: 10px; }
-.portion-module-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.portion-module-card { min-height: 68px; }
-.portion-module-card .section-info strong { font-size: 11px; }
+.portion-module-cards { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.portion-module-card .section-count { width: 20px; height: 20px; margin: 0; }
+.portion-content-panel { margin-top: 24px; }
+.portion-content-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.portion-content-heading h2 { margin: 0; color: #344239; font: 700 16px "Manrope", sans-serif; }
+.portion-content-heading p { margin: 5px 0 0; color: #939b94; font-size: 11px; }
+.portion-entry-form { margin-top: 16px; padding: 16px; border: 1px solid #e9ece6; border-radius: 9px; background: #fff; }
+.portion-entry-form label { display: block; margin-bottom: 7px; color: #35433a; font-size: 11px; font-weight: 700; }
+.portion-entry-form input { width: 100%; height: 40px; padding: 9px 11px; border: 1px solid #dfe5dd; border-radius: 7px; color: #35433a; background: #fcfdfb; font: inherit; font-size: 12px; }
+.portion-entry-form input:focus { outline: 0; border-color: #9ab59d; box-shadow: 0 0 0 3px #edf4eb; }
+.portion-entry-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; }
+.portion-entry-actions > span, .portion-sync-notice { color: #939b94; font-size: 10px; }
+.portion-sync-notice { margin: 8px 0 0; }
+.portion-entry-actions .primary-button:disabled { cursor: not-allowed; opacity: .6; }
+.portion-entry-list { display: flex; flex-direction: column; gap: 9px; margin: 14px 0 0; padding-left: 32px; }
+.portion-entry-list li { padding: 13px 15px; border: 1px solid #e9ece6; border-radius: 8px; background: #fff; color: #647d67; font-size: 12px; }
+.portion-entry-list li::marker { color: #647d67; font-size: 12px; font-weight: 700; }
+.portion-entry-list p { margin: 0; color: #35433a; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
+.portion-empty-state { margin-top: 14px; padding: 18px; border: 1px dashed #dde3dc; border-radius: 8px; color: #939b94; font-size: 11px; text-align: center; }
 .section-card { min-width: 0; min-height: 78px; display: flex; align-items: center; gap: 11px; padding: 13px 14px; border: 1px solid #e9ece6; border-radius: 9px; background: #fff; text-align: left; cursor: pointer; transition: border-color .16s, box-shadow .16s, transform .16s; }
 .section-card:hover { transform: translateY(-1px); border-color: #cbd9ca; box-shadow: 0 4px 12px #334a3a0c; }
+.portion-module-card { min-height: 46px; justify-content: space-between; gap: 4px; padding: 8px 6px; }
+.portion-module-card > strong { color: #35433a; font-size: 10px; white-space: nowrap; }
 .section-card.active-section:not(.revision-card) { border-color: #b7c9b8; box-shadow: 0 0 0 2px #eaf1e9; }
 .section-icon { width: 36px; height: 36px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 9px; }
 .section-icon svg { width: 19px; height: 19px; }
@@ -247,7 +265,8 @@ h1 span { color: var(--green-dark); }
 @media (min-width: 1400px) { .page-wrap { padding-top: 48px; } .welcome-row { min-height: 164px; } }
 @media (max-width: 900px) { .page-wrap { padding-right: 4%; padding-left: 4%; } .topbar { padding-right: 4%; padding-left: 4%; } .welcome-row { padding-left: 25px; } .welcome-art { right: 8px; opacity: .8; } }
 @media (max-width: 680px) { .topbar { min-height: 59px; height: auto; flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; } .brand { padding: 0; } .topbar-actions { gap: 8px; } .library-home-button { padding: 7px; font-size: 10px; } .contribute-open-button, .feedback-open-button { height: 34px; padding: 0 8px; font-size: 9px; } .page-wrap { padding-top: 24px; } .welcome-row { min-height: 134px; padding-left: 19px; } h1 { font-size: 21px; } .welcome-copy p { max-width: 220px; font-size: 10px; } .welcome-art { right: -39px; opacity: .58; } .subject-heading { margin-top: 25px; } .section-grid { grid-template-columns: 1fr; gap: 8px; } .section-card { min-height: 68px; } .files-section { margin-top: 25px; } .file-label { display: none; } .page-footer { font-size: 7px; } }
-@media (max-width: 680px) { .portion-module-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 680px) { .portion-module-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .portion-entry-form { padding: 12px; } .portion-entry-actions { align-items: flex-start; flex-direction: column; } }
 @media (max-width: 680px) { .topbar-actions .feedback-open-button { height: 34px; padding: 0 8px; font-size: 9px; } }
 @media (max-width: 400px) { .topbar { padding: 0 12px; } .page-wrap { padding-right: 12px; padding-left: 12px; } .welcome-row { padding-left: 14px; } .eyebrow { font-size: 7px; } h1 { font-size: 19px; } .welcome-art { right: -60px; } .subject-description { max-width: 235px; line-height: 1.5; } .primary-button { padding: 0 9px; } .file-row { gap: 8px; padding-right: 7px; padding-left: 8px; } .file-action { width: 25px; } }
 @media (max-width: 480px) { .login-screen { justify-content: center; padding: 78px 16px 20px; } .login-brand { top: 22px; left: 50%; } .login-theme-toggle { top: 72px; right: 16px; } .login-card { padding: 30px 24px 23px; } .login-art { right: 16px; } .login-card h1 { max-width: 245px; font-size: 22px; } }
@@ -424,6 +443,8 @@ html[data-theme="dark"] .share-choice,
 html[data-theme="dark"] .subject-tile,
 html[data-theme="dark"] .section-card,
 html[data-theme="dark"] .file-row,
+html[data-theme="dark"] .portion-entry-form,
+html[data-theme="dark"] .portion-entry-list li,
 html[data-theme="dark"] .sort-button,
 html[data-theme="dark"] .file-assign-button,
 html[data-theme="dark"] .upload-progress,
@@ -440,7 +461,8 @@ html[data-theme="dark"] .empty-state { border-color: #39473e; background: #1b241
 html[data-theme="dark"] .login-input,
 html[data-theme="dark"] .subject-dialog input,
 html[data-theme="dark"] .subject-dialog select,
-html[data-theme="dark"] .subject-dialog textarea {
+html[data-theme="dark"] .subject-dialog textarea,
+html[data-theme="dark"] .portion-entry-form input {
   color: #e4ebe6;
   border-color: #45554a;
   background: #18211b;
@@ -470,6 +492,8 @@ html[data-theme="dark"] h1,
 html[data-theme="dark"] .subject-title-row h2,
 html[data-theme="dark"] .section-info strong,
 html[data-theme="dark"] .files-title-row h2,
+html[data-theme="dark"] .portion-content-heading h2,
+html[data-theme="dark"] .portion-entry-list p,
 html[data-theme="dark"] .file-copy strong,
 html[data-theme="dark"] .empty-state h3,
 html[data-theme="dark"] .profile-menu strong,
@@ -492,6 +516,10 @@ html[data-theme="dark"] .eyebrow,
 html[data-theme="dark"] .welcome-copy p,
 html[data-theme="dark"] .subject-description,
 html[data-theme="dark"] .section-info > span,
+html[data-theme="dark"] .portion-content-heading p,
+html[data-theme="dark"] .portion-entry-actions > span,
+html[data-theme="dark"] .portion-sync-notice,
+html[data-theme="dark"] .portion-empty-state,
 html[data-theme="dark"] .files-heading p,
 html[data-theme="dark"] .file-copy span,
 html[data-theme="dark"] .empty-state p,
@@ -520,6 +548,10 @@ html[data-theme="dark"] .file-label.notes-label { color: #b6d2bb; background: #2
 html[data-theme="dark"] .file-label.portion-label { color: #b6d2bb; background: #2a3b30; }
 html[data-theme="dark"] .portion-modules-heading h3 { color: #d7e0d8; }
 html[data-theme="dark"] .portion-modules-heading span { color: #a4b0a7; }
+html[data-theme="dark"] .portion-entry-form label,
+html[data-theme="dark"] .portion-module-card > strong { color: #d7e0d8; }
+html[data-theme="dark"] .portion-entry-list li { border-color: #39473e; }
+html[data-theme="dark"] .portion-entry-list li::marker { color: #b6d2bb; }
 html[data-theme="dark"] .pdf-icon.image-file-icon { color: #b6d2df; background: #26333b; }
 html[data-theme="dark"] .empty-folder,
 html[data-theme="dark"] .empty-folder::before { border-color: #435449; background: #2a3b30; }

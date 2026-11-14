@@ -27,8 +27,7 @@ service cloud.firestore {
         && request.resource.data.size <= 26214400
         && request.resource.data.subject is string
         && request.resource.data.section in [
-          'revision', 'notes', 'contributed', 'exam-papers',
-          'portion-1', 'portion-2', 'portion-3', 'portion-4', 'portion-5', 'portion-6'
+          'revision', 'notes', 'contributed', 'exam-papers'
         ]
         && request.resource.data.createdAt is int
         && request.resource.data.chunkCount is int
@@ -79,10 +78,7 @@ service cloud.firestore {
         ])
         && (
           request.resource.data.section in ['contributed', 'exam-papers']
-          || (isAdmin() && request.resource.data.section in [
-            'revision', 'notes',
-            'portion-1', 'portion-2', 'portion-3', 'portion-4', 'portion-5', 'portion-6'
-          ])
+          || (isAdmin() && request.resource.data.section in ['revision', 'notes'])
         );
       allow update: if isAdmin()
         || (signedIn()
@@ -109,6 +105,25 @@ service cloud.firestore {
         allow update: if false;
         allow delete: if canDeletePdfChunk(pdfId);
       }
+    }
+
+    match /portionEntries/{entryId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly([
+          'subject', 'module', 'text', 'createdAt'
+        ])
+        && request.resource.data.subject is string
+        && request.resource.data.subject.size() > 0
+        && request.resource.data.subject.size() <= 60
+        && request.resource.data.module in [
+          'portion-1', 'portion-2', 'portion-3', 'portion-4', 'portion-5', 'portion-6'
+        ]
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 20
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
     }
 
     match /users/{userId} {

@@ -11,7 +11,7 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=20261114-portions-v11" />
+    <link rel="stylesheet" href="styles.css?v=20261114-portions-text-v12" />
   </head>
   <body>
     <main id="login-screen" class="login-screen">
@@ -191,16 +191,37 @@
             <section id="portion-module-grid" class="portion-module-grid" aria-label="Portion modules" hidden>
               <div class="portion-modules-heading">
                 <h3>Choose a module</h3>
-                <span>Each module has its own shared files.</span>
+                <span>All six modules are grouped here.</span>
               </div>
               <div class="portion-module-cards">
-                <button class="section-card portion-module-card" type="button" data-portion-module="portion-1"><span class="section-info"><strong>Module 1</strong><span>Portion materials</span></span><span class="section-count" id="portion-1-count">0</span><span class="section-arrow">↗</span></button>
-                <button class="section-card portion-module-card" type="button" data-portion-module="portion-2"><span class="section-info"><strong>Module 2</strong><span>Portion materials</span></span><span class="section-count" id="portion-2-count">0</span><span class="section-arrow">↗</span></button>
-                <button class="section-card portion-module-card" type="button" data-portion-module="portion-3"><span class="section-info"><strong>Module 3</strong><span>Portion materials</span></span><span class="section-count" id="portion-3-count">0</span><span class="section-arrow">↗</span></button>
-                <button class="section-card portion-module-card" type="button" data-portion-module="portion-4"><span class="section-info"><strong>Module 4</strong><span>Portion materials</span></span><span class="section-count" id="portion-4-count">0</span><span class="section-arrow">↗</span></button>
-                <button class="section-card portion-module-card" type="button" data-portion-module="portion-5"><span class="section-info"><strong>Module 5</strong><span>Portion materials</span></span><span class="section-count" id="portion-5-count">0</span><span class="section-arrow">↗</span></button>
-                <button class="section-card portion-module-card" type="button" data-portion-module="portion-6"><span class="section-info"><strong>Module 6</strong><span>Portion materials</span></span><span class="section-count" id="portion-6-count">0</span><span class="section-arrow">↗</span></button>
+                <button class="section-card portion-module-card" type="button" data-portion-module="portion-1"><strong>Module 1</strong><span class="section-count" id="portion-1-count">0</span></button>
+                <button class="section-card portion-module-card" type="button" data-portion-module="portion-2"><strong>Module 2</strong><span class="section-count" id="portion-2-count">0</span></button>
+                <button class="section-card portion-module-card" type="button" data-portion-module="portion-3"><strong>Module 3</strong><span class="section-count" id="portion-3-count">0</span></button>
+                <button class="section-card portion-module-card" type="button" data-portion-module="portion-4"><strong>Module 4</strong><span class="section-count" id="portion-4-count">0</span></button>
+                <button class="section-card portion-module-card" type="button" data-portion-module="portion-5"><strong>Module 5</strong><span class="section-count" id="portion-5-count">0</span></button>
+                <button class="section-card portion-module-card" type="button" data-portion-module="portion-6"><strong>Module 6</strong><span class="section-count" id="portion-6-count">0</span></button>
               </div>
+            </section>
+
+            <section id="portion-content-panel" class="portion-content-panel" aria-labelledby="portion-module-title" hidden>
+              <div class="portion-content-heading">
+                <div>
+                  <h2 id="portion-module-title">Module 1</h2>
+                  <p>Topics are shared and numbered automatically.</p>
+                </div>
+                <span id="portion-entry-count" class="files-total">0</span>
+              </div>
+              <form id="portion-entry-form" class="portion-entry-form">
+                <label for="portion-entry-text">Add a topic for this module</label>
+                <input id="portion-entry-text" type="text" maxlength="20" placeholder="Enter a topic (max 20 characters)" required />
+                <p id="portion-sync-notice" class="portion-sync-notice" role="status" hidden></p>
+                <div class="portion-entry-actions">
+                  <span>Up to 20 characters · Visible to all signed-in users</span>
+                  <button class="primary-button" type="submit">＋ Add to stack</button>
+                </div>
+              </form>
+              <ol id="portion-entry-list" class="portion-entry-list" aria-label="Numbered portion topics"></ol>
+              <div id="portion-empty-state" class="portion-empty-state" hidden>No topics in this module yet. Add the first one above.</div>
             </section>
 
             <section class="files-section">
@@ -384,7 +405,7 @@
       </form>
     </dialog>
     <script src="firebase-config.js?v=20261114-whatsapp-share-v8"></script>
-    <script src="firebase-backend.js?v=20261114-portions-v11"></script>
-    <script src="app.js?v=20261114-portions-v11"></script>
+    <script src="firebase-backend.js?v=20261114-portions-text-v12"></script>
+    <script src="app.js?v=20261114-portions-text-v12"></script>
   </body>
 </html>

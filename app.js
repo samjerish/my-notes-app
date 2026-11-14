@@ -9,6 +9,7 @@ const UNASSIGNED_SUBJECT = "Unassigned";
 const CONTRIBUTION_SECTION = "contributed";
 const EXAM_PAPERS_SECTION = "exam-papers";
 const PORTIONS_SECTION = "portions";
+const MAX_PORTION_TEXT_LENGTH = 20;
 const PORTION_MODULES = Array.from({ length: 6 }, (_, index) => ({
   section: `portion-${index + 1}`,
   name: `Module ${index + 1}`,
@@ -33,6 +34,7 @@ let toastTimer;
 let uploadProgressTimer;
 let cloudBackend = null;
 let sharedFiles = null;
+let sharedPortionEntries = [];
 let stopCloudSubscriptions = null;
 let pendingFileAssignment = null;
 let pendingShareFile = null;
@@ -47,8 +49,8 @@ function getPortionModule(section) {
   return PORTION_MODULES.find((module) => module.section === section) || null;
 }
 
-function isPortionSection(section) {
-  return Boolean(getPortionModule(section));
+function getTimestampMilliseconds(timestamp) {
+  return typeof timestamp?.toMillis === "function" ? timestamp.toMillis() : 0;
 }
 
 const fileInput = document.querySelector("#file-input");
@@ -253,6 +255,7 @@ function stopWatchingCloudLibrary() {
   if (stopCloudSubscriptions) stopCloudSubscriptions();
   stopCloudSubscriptions = null;
   sharedFiles = null;
+  sharedPortionEntries = [];
 }
 
 function startWatchingCloudLibrary() {
@@ -280,6 +283,10 @@ function startWatchingCloudLibrary() {
       subjects = sharedSubjects;
       cacheSubjects(subjects);
       showBackendStatus("");
+      render().catch(reportRenderError);
+    },
+    (entries) => {
+      sharedPortionEntries = entries;
       render().catch(reportRenderError);
     },
     reportRenderError,
@@ -573,23 +580,24 @@ async function render() {
   const isPortionView = isPortionsLanding || Boolean(portionModule);
   document.querySelector("#section-grid").hidden = isUnassigned;
   document.querySelector("#portion-module-grid").hidden = isUnassigned || !isPortionView;
-  document.querySelector(".files-section").hidden = isPortionsLanding;
+  document.querySelector("#portion-content-panel").hidden = isUnassigned || !portionModule;
+  document.querySelector(".files-section").hidden = isPortionView;
   document.querySelectorAll("#section-grid .section-card").forEach((card) => {
     const active = card.dataset.section === state.section
-      || (card.dataset.section === PORTIONS_SECTION && isPortionSection(state.section));
+      || (card.dataset.section === PORTIONS_SECTION && Boolean(getPortionModule(state.section)));
     card.classList.toggle("active-section", active);
   });
   document.querySelectorAll(".portion-module-card").forEach((card) => {
     card.classList.toggle("active-section", card.dataset.portionModule === state.section);
   });
   const uploadButton = document.querySelector("#upload-button");
-  uploadButton.hidden = isUnassigned || isPortionsLanding || adminOnlyUploadHidden;
-  uploadButton.lastChild.textContent = isExamPapers ? "Add PDF or image" : portionModule ? `Add to ${portionModule.name}` : "Add PDF";
+  uploadButton.hidden = isUnassigned || isPortionView || adminOnlyUploadHidden;
+  uploadButton.lastChild.textContent = isExamPapers ? "Add PDF or image" : "Add PDF";
   document.querySelector("#subject-description").hidden = isUnassigned;
   document.querySelector("#sort-button").hidden = isUnassigned;
   const emptyUploadButton = document.querySelector("#empty-upload-button");
-  emptyUploadButton.hidden = isUnassigned || isPortionsLanding || adminOnlyUploadHidden;
-  emptyUploadButton.lastChild.textContent = isExamPapers ? "Add your first paper" : portionModule ? `Add to ${portionModule.name}` : "Add your first PDF";
+  emptyUploadButton.hidden = isUnassigned || isPortionView || adminOnlyUploadHidden;
+  emptyUploadButton.lastChild.textContent = isExamPapers ? "Add your first paper" : "Add your first PDF";
   document.querySelector("#subject-list").replaceChildren(
     ...displaySubjects.map((subject) => makeSubjectCard(subject, subjectCounts.get(subject))),
   );
@@ -605,16 +613,41 @@ async function render() {
   const noteFiles = subjectFiles.filter((file) => file.section === "notes");
   const contributedFiles = subjectFiles.filter((file) => file.section === CONTRIBUTION_SECTION);
   const examPaperFiles = subjectFiles.filter((file) => file.section === EXAM_PAPERS_SECTION);
-  const portionFiles = subjectFiles.filter((file) => isPortionSection(file.section));
+  const subjectPortionEntries = sharedPortionEntries.filter((entry) => entry.subject === state.subject);
   document.querySelector("#revision-count").textContent = revisionFiles.length;
   document.querySelector("#notes-count").textContent = noteFiles.length;
   document.querySelector("#contributed-count").textContent = contributedFiles.length;
   document.querySelector("#exam-papers-count").textContent = examPaperFiles.length;
-  document.querySelector("#portions-count").textContent = portionFiles.length;
+  document.querySelector("#portions-count").textContent = subjectPortionEntries.length;
   PORTION_MODULES.forEach((module) => {
     document.querySelector(`#${module.section}-count`).textContent =
-      subjectFiles.filter((file) => file.section === module.section).length;
+      subjectPortionEntries.filter((entry) => entry.module === module.section).length;
   });
+  if (portionModule) {
+    const moduleEntries = subjectPortionEntries
+      .filter((entry) => entry.module === portionModule.section)
+      .sort((left, right) => getTimestampMilliseconds(left.createdAt) - getTimestampMilliseconds(right.createdAt)
+        || left.id.localeCompare(right.id));
+    const canAddPortionEntry = Boolean(cloudBackend?.auth.currentUser);
+    const portionEntryForm = document.querySelector("#portion-entry-form");
+    portionEntryForm.querySelector("input").disabled = !canAddPortionEntry;
+    portionEntryForm.querySelector('button[type="submit"]').disabled = !canAddPortionEntry;
+    document.querySelector("#portion-sync-notice").hidden = canAddPortionEntry;
+    document.querySelector("#portion-sync-notice").textContent =
+      "Sign in with an internet connection to add topics and sync them across devices.";
+    document.querySelector("#portion-module-title").textContent = portionModule.name;
+    document.querySelector("#portion-entry-count").textContent = moduleEntries.length;
+    document.querySelector("#portion-entry-list").replaceChildren(
+      ...moduleEntries.map((entry) => {
+        const item = document.createElement("li");
+        const text = document.createElement("p");
+        text.textContent = entry.text;
+        item.append(text);
+        return item;
+      }),
+    );
+    document.querySelector("#portion-empty-state").hidden = moduleEntries.length > 0;
+  }
   document.querySelector("#subject-heading").textContent = state.subject;
   document.querySelector("#subject-description").textContent = state.subject === "TOC"
     ? "Theory of Computation · Your notes & revision material"
@@ -763,7 +796,7 @@ document.querySelector("#login-form").addEventListener("submit", async (event) =
 });
 
 function isAdminOnlySection(section) {
-  return section === "revision" || section === "notes" || isPortionSection(section);
+  return section === "revision" || section === "notes";
 }
 
 function openFilePicker(section) {
@@ -992,6 +1025,34 @@ document.querySelectorAll(".portion-module-card").forEach((card) => {
     state.section = card.dataset.portionModule;
     await render();
   });
+});
+
+document.querySelector("#portion-entry-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const module = getPortionModule(state.section);
+  const textInput = document.querySelector("#portion-entry-text");
+  const submitButton = event.currentTarget.querySelector('button[type="submit"]');
+  const text = textInput.value.trim();
+  if (!module || !text || text.length > MAX_PORTION_TEXT_LENGTH) {
+    showToast("Enter a topic up to 20 characters.", true);
+    return;
+  }
+  if (!cloudBackend?.auth.currentUser) {
+    showToast("Sign in with an internet connection to add a shared topic.", true);
+    return;
+  }
+
+  submitButton.disabled = true;
+  try {
+    await cloudBackend.savePortionEntry({ subject: state.subject, module: module.section, text });
+    textInput.value = "";
+    showToast(`Added to ${module.name}.`);
+  } catch (error) {
+    console.error("Could not add a portion topic:", error);
+    showToast(error.message || "Couldn't add this topic. Check your connection and try again.", true);
+  } finally {
+    submitButton.disabled = !cloudBackend?.auth.currentUser;
+  }
 });
 
 document.querySelector("#sort-button").addEventListener("click", async (event) => {

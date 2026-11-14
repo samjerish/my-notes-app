@@ -4,7 +4,6 @@
   const MAX_FILE_SIZE = 25 * 1024 * 1024;
   const CHUNKS_PER_BATCH = 8;
   const IMAGE_TYPES_BY_EXTENSION = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg" };
-  const isPortionSection = (section) => /^portion-[1-6]$/.test(section);
   let backendPromise;
 
   function getSupportedFileType(file, section) {
@@ -101,9 +100,9 @@
         if (!user) throw new Error("Sign in before uploading a file.");
         const reportProgress = typeof options.onProgress === "function" ? options.onProgress : () => {};
         reportProgress(0);
-        const isAdminUpload = section === "revision" || section === "notes" || isPortionSection(section);
+        const isAdminUpload = section === "revision" || section === "notes";
         if (isAdminUpload && !isAdmin()) {
-          throw new Error("Only the configured Firebase admin can upload Revision, Handwritten, or Portions PDFs.");
+          throw new Error("Only the configured Firebase admin can upload Revision or Handwritten PDFs.");
         }
         if (!file || typeof file.arrayBuffer !== "function" || !Number.isInteger(file.size)
           || file.size <= 0 || file.size > MAX_FILE_SIZE || typeof file.name !== "string") {
@@ -197,6 +196,24 @@
         );
       };
 
+      const savePortionEntry = async ({ subject, module, text }) => {
+        const user = auth.currentUser;
+        const trimmedText = typeof text === "string" ? text.trim() : "";
+        if (!user) throw new Error("Sign in before adding a portion topic.");
+        if (typeof subject !== "string" || !subject.trim() || subject.length > 60
+          || !/^portion-[1-6]$/.test(module)
+          || !trimmedText || trimmedText.length > 20) {
+          throw new Error("Enter a topic up to 20 characters and choose a valid module.");
+        }
+        const reference = firestoreSdk.doc(firestoreSdk.collection(database, "portionEntries"));
+        await firestoreSdk.setDoc(reference, {
+          subject,
+          module,
+          text: trimmedText,
+          createdAt: firestoreSdk.serverTimestamp(),
+        });
+      };
+
       return {
         auth,
         isAdmin,
@@ -234,7 +251,7 @@
           );
         },
         getAllFiles,
-        watchLibrary: (onFiles, onSubjects, onError) => {
+        watchLibrary: (onFiles, onSubjects, onPortionEntries, onError) => {
           if (!auth.currentUser) throw new Error("Sign in before syncing the shared library.");
           const stopFiles = firestoreSdk.onSnapshot(
             firestoreSdk.collection(database, "pdfs"),
@@ -250,11 +267,20 @@
             (snapshot) => onSubjects(snapshot.exists() ? snapshot.data().subjects : null),
             onError,
           );
+          const stopPortionEntries = firestoreSdk.onSnapshot(
+            firestoreSdk.collection(database, "portionEntries"),
+            (snapshot) => onPortionEntries(
+              snapshot.docs.map((item) => ({ id: item.id, ...item.data() })),
+            ),
+            onError,
+          );
           return () => {
             stopFiles();
             stopSubjects();
+            stopPortionEntries();
           };
         },
+        savePortionEntry,
         saveFile,
         getFileBlob: async (file) => {
           if (!auth.currentUser) throw new Error("Sign in to open this file.");
