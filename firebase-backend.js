@@ -4,6 +4,7 @@
   const MAX_FILE_SIZE = 25 * 1024 * 1024;
   const CHUNKS_PER_BATCH = 8;
   const IMAGE_TYPES_BY_EXTENSION = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg" };
+  const isPortionSection = (section) => /^portion-[1-6]$/.test(section);
   let backendPromise;
 
   function getSupportedFileType(file, section) {
@@ -100,9 +101,9 @@
         if (!user) throw new Error("Sign in before uploading a file.");
         const reportProgress = typeof options.onProgress === "function" ? options.onProgress : () => {};
         reportProgress(0);
-        const isAdminUpload = section === "revision" || section === "notes";
+        const isAdminUpload = section === "revision" || section === "notes" || isPortionSection(section);
         if (isAdminUpload && !isAdmin()) {
-          throw new Error("Only the configured Firebase admin can upload Revision or Handwritten PDFs.");
+          throw new Error("Only the configured Firebase admin can upload Revision, Handwritten, or Portions PDFs.");
         }
         if (!file || typeof file.arrayBuffer !== "function" || !Number.isInteger(file.size)
           || file.size <= 0 || file.size > MAX_FILE_SIZE || typeof file.name !== "string") {

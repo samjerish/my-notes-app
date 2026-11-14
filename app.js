@@ -8,6 +8,11 @@ const ADMIN_PROFILE = { name: "Sam", batch: "3" };
 const UNASSIGNED_SUBJECT = "Unassigned";
 const CONTRIBUTION_SECTION = "contributed";
 const EXAM_PAPERS_SECTION = "exam-papers";
+const PORTIONS_SECTION = "portions";
+const PORTION_MODULES = Array.from({ length: 6 }, (_, index) => ({
+  section: `portion-${index + 1}`,
+  name: `Module ${index + 1}`,
+}));
 const MAX_FILE_SIZE = 25 * 1024 * 1024;
 const IMAGE_TYPES_BY_EXTENSION = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg" };
 const BUNDLED_REVISION_FILES = [
@@ -37,6 +42,14 @@ let pendingAdminRequest = null;
 let preserveAdminRequestOnCodeClose = false;
 let requestedUploadSection = null;
 let authorizedAdminUploadSection = null;
+
+function getPortionModule(section) {
+  return PORTION_MODULES.find((module) => module.section === section) || null;
+}
+
+function isPortionSection(section) {
+  return Boolean(getPortionModule(section));
+}
 
 const fileInput = document.querySelector("#file-input");
 const fileList = document.querySelector("#file-list");
@@ -309,10 +322,11 @@ function makeFileRow(file) {
   row.className = "file-row";
   row.classList.toggle("unassigned-file-row", state.subject === UNASSIGNED_SUBJECT);
   const isImage = file.type?.startsWith("image/");
+  const portionModule = getPortionModule(file.section);
   row.innerHTML = `
     <span class="pdf-icon ${isImage ? "image-file-icon" : ""}">${isImage ? iconMarkup("image") : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4 4v13H7a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2Z"/><path d="M14 4v4h4M8.5 15.5h7"/></svg>'}</span>
     <span class="file-copy"><strong title="${escapeHTML(file.name)}">${escapeHTML(file.name)}</strong><span>${formatSize(file.size)} · Added ${formatDate(file.createdAt)}</span></span>
-    <span class="file-label ${file.section === "notes" ? "notes-label" : ""}">${file.section === CONTRIBUTION_SECTION ? "Contributed" : file.section === "notes" ? "Handwritten" : isImage ? "Exam Image" : file.section === EXAM_PAPERS_SECTION ? "Exam Paper" : "Revision"}</span>
+    <span class="file-label ${file.section === "notes" ? "notes-label" : portionModule ? "portion-label" : ""}">${portionModule ? portionModule.name : file.section === CONTRIBUTION_SECTION ? "Contributed" : file.section === "notes" ? "Handwritten" : isImage ? "Exam Image" : file.section === EXAM_PAPERS_SECTION ? "Exam Paper" : "Revision"}</span>
     <span class="file-actions">
       <button class="file-action" type="button" data-action="download" aria-label="Download ${escapeHTML(file.name)}" title="Download">${iconMarkup("download")}</button>
       <button class="file-action" type="button" data-action="share" aria-label="Share ${escapeHTML(file.name)}" title="Share">${iconMarkup("share")}</button>
@@ -554,15 +568,28 @@ async function render() {
   document.querySelector("#subject-view").hidden = state.view !== "subject";
   const isUnassigned = state.subject === UNASSIGNED_SUBJECT;
   const isExamPapers = state.section === EXAM_PAPERS_SECTION;
+  const isPortionsLanding = state.section === PORTIONS_SECTION;
+  const portionModule = getPortionModule(state.section);
+  const isPortionView = isPortionsLanding || Boolean(portionModule);
   document.querySelector("#section-grid").hidden = isUnassigned;
+  document.querySelector("#portion-module-grid").hidden = isUnassigned || !isPortionView;
+  document.querySelector(".files-section").hidden = isPortionsLanding;
+  document.querySelectorAll("#section-grid .section-card").forEach((card) => {
+    const active = card.dataset.section === state.section
+      || (card.dataset.section === PORTIONS_SECTION && isPortionSection(state.section));
+    card.classList.toggle("active-section", active);
+  });
+  document.querySelectorAll(".portion-module-card").forEach((card) => {
+    card.classList.toggle("active-section", card.dataset.portionModule === state.section);
+  });
   const uploadButton = document.querySelector("#upload-button");
-  uploadButton.hidden = isUnassigned || adminOnlyUploadHidden;
-  uploadButton.lastChild.textContent = isExamPapers ? "Add PDF or image" : "Add PDF";
+  uploadButton.hidden = isUnassigned || isPortionsLanding || adminOnlyUploadHidden;
+  uploadButton.lastChild.textContent = isExamPapers ? "Add PDF or image" : portionModule ? `Add to ${portionModule.name}` : "Add PDF";
   document.querySelector("#subject-description").hidden = isUnassigned;
   document.querySelector("#sort-button").hidden = isUnassigned;
   const emptyUploadButton = document.querySelector("#empty-upload-button");
-  emptyUploadButton.hidden = isUnassigned || adminOnlyUploadHidden;
-  emptyUploadButton.lastChild.textContent = isExamPapers ? "Add your first paper" : "Add your first PDF";
+  emptyUploadButton.hidden = isUnassigned || isPortionsLanding || adminOnlyUploadHidden;
+  emptyUploadButton.lastChild.textContent = isExamPapers ? "Add your first paper" : portionModule ? `Add to ${portionModule.name}` : "Add your first PDF";
   document.querySelector("#subject-list").replaceChildren(
     ...displaySubjects.map((subject) => makeSubjectCard(subject, subjectCounts.get(subject))),
   );
@@ -578,17 +605,25 @@ async function render() {
   const noteFiles = subjectFiles.filter((file) => file.section === "notes");
   const contributedFiles = subjectFiles.filter((file) => file.section === CONTRIBUTION_SECTION);
   const examPaperFiles = subjectFiles.filter((file) => file.section === EXAM_PAPERS_SECTION);
+  const portionFiles = subjectFiles.filter((file) => isPortionSection(file.section));
   document.querySelector("#revision-count").textContent = revisionFiles.length;
   document.querySelector("#notes-count").textContent = noteFiles.length;
   document.querySelector("#contributed-count").textContent = contributedFiles.length;
   document.querySelector("#exam-papers-count").textContent = examPaperFiles.length;
+  document.querySelector("#portions-count").textContent = portionFiles.length;
+  PORTION_MODULES.forEach((module) => {
+    document.querySelector(`#${module.section}-count`).textContent =
+      subjectFiles.filter((file) => file.section === module.section).length;
+  });
   document.querySelector("#subject-heading").textContent = state.subject;
   document.querySelector("#subject-description").textContent = state.subject === "TOC"
     ? "Theory of Computation · Your notes & revision material"
     : state.subject === UNASSIGNED_SUBJECT
     ? "Files saved from removed subjects."
     : `${state.subject} · Your notes & revision material`;
-  const visibleFiles = isUnassigned ? subjectFiles : state.section === "notes"
+  const visibleFiles = isUnassigned ? subjectFiles : portionModule
+    ? subjectFiles.filter((file) => file.section === portionModule.section)
+    : state.section === "notes"
     ? noteFiles
     : state.section === CONTRIBUTION_SECTION ? contributedFiles
     : isExamPapers ? examPaperFiles : revisionFiles;
@@ -596,12 +631,16 @@ async function render() {
     .sort((a, b) => state.sortOldest ? a.createdAt - b.createdAt : b.createdAt - a.createdAt);
   document.querySelector("#files-title").textContent = isUnassigned
     ? "Unassigned files"
+    : portionModule
+    ? `Portions · ${portionModule.name}`
     : state.section === "notes"
     ? "Handwritten notes"
     : state.section === CONTRIBUTION_SECTION ? "Contributed PDFs"
     : isExamPapers ? "Exam Papers" : "Revision PDFs";
   document.querySelector("#files-subtitle").textContent = isUnassigned
     ? "Choose a subject for each file to add it to your library."
+    : portionModule
+    ? `Admin-only uploads · Shared study materials for ${portionModule.name}.`
     : state.section === "notes"
     ? "Admin-only uploads · Scans of your own notes, all in one place."
     : state.section === CONTRIBUTION_SECTION
@@ -614,6 +653,8 @@ async function render() {
   document.querySelector("#files-total").textContent = sectionFiles.length;
   document.querySelector("#empty-state-description").textContent = isUnassigned
     ? "No files are currently assigned to a subject."
+    : portionModule
+    ? `Add PDFs for ${portionModule.name} here. They will be available on all signed-in devices.`
     : isExamPapers
     ? "Add Internals and previous year question papers (PYQs) here for everyone to access."
     : `Your ${state.section === "notes" ? "handwritten notes" : state.section === CONTRIBUTION_SECTION ? "contributed" : "revision"} material will feel right at home here. Drop in a PDF to get started.`;
@@ -657,8 +698,10 @@ async function addSelectedFiles(files, section = state.section) {
       ? "Handwritten notes"
       : section === CONTRIBUTION_SECTION ? "Contributed PDFs"
       : section === EXAM_PAPERS_SECTION ? "Exam Papers" : "Revision PDFs";
+    const portionModule = getPortionModule(section);
+    const sectionLabel = portionModule ? `Portions · ${portionModule.name}` : sectionName;
     const itemName = section === EXAM_PAPERS_SECTION ? "file" : "PDF";
-    showToast(`${uploads.length} ${itemName}${uploads.length === 1 ? "" : "s"} added to ${sectionName}.`);
+    showToast(`${uploads.length} ${itemName}${uploads.length === 1 ? "" : "s"} added to ${sectionLabel}.`);
   } catch (error) {
     hideUploadProgress();
     console.error("Could not save file:", error);
@@ -720,7 +763,7 @@ document.querySelector("#login-form").addEventListener("submit", async (event) =
 });
 
 function isAdminOnlySection(section) {
-  return section === "revision" || section === "notes";
+  return section === "revision" || section === "notes" || isPortionSection(section);
 }
 
 function openFilePicker(section) {
@@ -937,10 +980,16 @@ fileInput.addEventListener("cancel", () => {
   authorizedAdminUploadSection = null;
 });
 
-document.querySelectorAll(".section-card").forEach((card) => {
+document.querySelectorAll("#section-grid .section-card").forEach((card) => {
   card.addEventListener("click", async () => {
     state.section = card.dataset.section;
-    document.querySelectorAll(".section-card").forEach((item) => item.classList.toggle("active-section", item === card));
+    await render();
+  });
+});
+
+document.querySelectorAll(".portion-module-card").forEach((card) => {
+  card.addEventListener("click", async () => {
+    state.section = card.dataset.portionModule;
     await render();
   });
 });

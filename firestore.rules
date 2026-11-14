@@ -26,7 +26,10 @@ service cloud.firestore {
         && request.resource.data.size > 0
         && request.resource.data.size <= 26214400
         && request.resource.data.subject is string
-        && request.resource.data.section in ['revision', 'notes', 'contributed', 'exam-papers']
+        && request.resource.data.section in [
+          'revision', 'notes', 'contributed', 'exam-papers',
+          'portion-1', 'portion-2', 'portion-3', 'portion-4', 'portion-5', 'portion-6'
+        ]
         && request.resource.data.createdAt is int
         && request.resource.data.chunkCount is int
         && request.resource.data.chunkCount > 0
@@ -76,7 +79,10 @@ service cloud.firestore {
         ])
         && (
           request.resource.data.section in ['contributed', 'exam-papers']
-          || (isAdmin() && request.resource.data.section in ['revision', 'notes'])
+          || (isAdmin() && request.resource.data.section in [
+            'revision', 'notes',
+            'portion-1', 'portion-2', 'portion-3', 'portion-4', 'portion-5', 'portion-6'
+          ])
         );
       allow update: if isAdmin()
         || (signedIn()

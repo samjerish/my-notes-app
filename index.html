@@ -11,7 +11,7 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=20261114-exam-images-v10" />
+    <link rel="stylesheet" href="styles.css?v=20261114-portions-v11" />
   </head>
   <body>
     <main id="login-screen" class="login-screen">
@@ -178,6 +178,29 @@
                 <span class="section-count" id="exam-papers-count">0</span>
                 <span class="section-arrow">↗</span>
               </button>
+              <button class="section-card portions-card" type="button" data-section="portions">
+                <span class="section-icon portions-icon">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h14v15H5z"/><path d="M8 8h8m-8 4h8m-8 4h5"/></svg>
+                </span>
+                <span class="section-info"><strong>Portions</strong><span>Study materials for Modules 1–6</span></span>
+                <span class="section-count" id="portions-count">0</span>
+                <span class="section-arrow">↗</span>
+              </button>
+            </section>
+
+            <section id="portion-module-grid" class="portion-module-grid" aria-label="Portion modules" hidden>
+              <div class="portion-modules-heading">
+                <h3>Choose a module</h3>
+                <span>Each module has its own shared files.</span>
+              </div>
+              <div class="portion-module-cards">
+                <button class="section-card portion-module-card" type="button" data-portion-module="portion-1"><span class="section-info"><strong>Module 1</strong><span>Portion materials</span></span><span class="section-count" id="portion-1-count">0</span><span class="section-arrow">↗</span></button>
+                <button class="section-card portion-module-card" type="button" data-portion-module="portion-2"><span class="section-info"><strong>Module 2</strong><span>Portion materials</span></span><span class="section-count" id="portion-2-count">0</span><span class="section-arrow">↗</span></button>
+                <button class="section-card portion-module-card" type="button" data-portion-module="portion-3"><span class="section-info"><strong>Module 3</strong><span>Portion materials</span></span><span class="section-count" id="portion-3-count">0</span><span class="section-arrow">↗</span></button>
+                <button class="section-card portion-module-card" type="button" data-portion-module="portion-4"><span class="section-info"><strong>Module 4</strong><span>Portion materials</span></span><span class="section-count" id="portion-4-count">0</span><span class="section-arrow">↗</span></button>
+                <button class="section-card portion-module-card" type="button" data-portion-module="portion-5"><span class="section-info"><strong>Module 5</strong><span>Portion materials</span></span><span class="section-count" id="portion-5-count">0</span><span class="section-arrow">↗</span></button>
+                <button class="section-card portion-module-card" type="button" data-portion-module="portion-6"><span class="section-info"><strong>Module 6</strong><span>Portion materials</span></span><span class="section-count" id="portion-6-count">0</span><span class="section-arrow">↗</span></button>
+              </div>
             </section>
 
             <section class="files-section">
@@ -361,7 +384,7 @@
       </form>
     </dialog>
     <script src="firebase-config.js?v=20261114-whatsapp-share-v8"></script>
-    <script src="firebase-backend.js?v=20261114-exam-images-v10"></script>
-    <script src="app.js?v=20261114-exam-images-v10"></script>
+    <script src="firebase-backend.js?v=20261114-portions-v11"></script>
+    <script src="app.js?v=20261114-portions-v11"></script>
   </body>
 </html>

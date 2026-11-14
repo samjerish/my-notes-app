@@ -161,6 +161,14 @@ h1 span { color: var(--green-dark); }
 .primary-button:hover { background: var(--green-dark); transform: translateY(-1px); }
 .primary-button svg { width: 15px; height: 15px; }
 .section-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+.portions-card { grid-column: 1 / -1; }
+.portion-module-grid { margin-top: 20px; }
+.portion-modules-heading { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+.portion-modules-heading h3 { margin: 0; color: #35433a; font: 700 13px "Manrope", sans-serif; }
+.portion-modules-heading span { color: #959d96; font-size: 10px; }
+.portion-module-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.portion-module-card { min-height: 68px; }
+.portion-module-card .section-info strong { font-size: 11px; }
 .section-card { min-width: 0; min-height: 78px; display: flex; align-items: center; gap: 11px; padding: 13px 14px; border: 1px solid #e9ece6; border-radius: 9px; background: #fff; text-align: left; cursor: pointer; transition: border-color .16s, box-shadow .16s, transform .16s; }
 .section-card:hover { transform: translateY(-1px); border-color: #cbd9ca; box-shadow: 0 4px 12px #334a3a0c; }
 .section-card.active-section:not(.revision-card) { border-color: #b7c9b8; box-shadow: 0 0 0 2px #eaf1e9; }
@@ -170,12 +178,14 @@ h1 span { color: var(--green-dark); }
 .notes-icon { color: #718e75; background: #edf4eb; }
 .contribution-icon { color: #667f9a; background: #eef3f8; font-size: 20px; }
 .exam-papers-icon { color: #8a7598; background: #f3eef7; font-size: 17px; font-weight: 700; }
+.portions-icon { color: #647d67; background: #eef4ed; }
 .section-info { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
 .section-info strong { color: #35433a; font-size: 11px; font-weight: 700; line-height: 1.4; overflow-wrap: anywhere; }
 .section-info > span { color: #959d96; font-size: 9px; line-height: 1.45; overflow-wrap: anywhere; }
 .section-admin-indicator { align-self: flex-start; margin-top: 1px; padding: 3px 5px; border-radius: 4px; color: var(--green-dark); background: var(--green-light); font-size: 7px; font-weight: 700; letter-spacing: .4px; white-space: nowrap; }
 .section-count { width: 22px; height: 22px; display: grid; place-items: center; margin-left: auto; border-radius: 50%; color: #858e86; background: #f5f6f3; font-size: 9px; }
 .section-arrow { align-self: flex-start; margin: 0 0 0 1px; color: #acb3ac; font-size: 12px; }
+.portion-label { color: #66836b; background: #edf4eb; }
 .files-section { margin-top: 32px; }
 .files-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 15px; margin-bottom: 12px; }
 .files-title-row { display: flex; align-items: center; gap: 8px; }
@@ -237,6 +247,7 @@ h1 span { color: var(--green-dark); }
 @media (min-width: 1400px) { .page-wrap { padding-top: 48px; } .welcome-row { min-height: 164px; } }
 @media (max-width: 900px) { .page-wrap { padding-right: 4%; padding-left: 4%; } .topbar { padding-right: 4%; padding-left: 4%; } .welcome-row { padding-left: 25px; } .welcome-art { right: 8px; opacity: .8; } }
 @media (max-width: 680px) { .topbar { min-height: 59px; height: auto; flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; } .brand { padding: 0; } .topbar-actions { gap: 8px; } .library-home-button { padding: 7px; font-size: 10px; } .contribute-open-button, .feedback-open-button { height: 34px; padding: 0 8px; font-size: 9px; } .page-wrap { padding-top: 24px; } .welcome-row { min-height: 134px; padding-left: 19px; } h1 { font-size: 21px; } .welcome-copy p { max-width: 220px; font-size: 10px; } .welcome-art { right: -39px; opacity: .58; } .subject-heading { margin-top: 25px; } .section-grid { grid-template-columns: 1fr; gap: 8px; } .section-card { min-height: 68px; } .files-section { margin-top: 25px; } .file-label { display: none; } .page-footer { font-size: 7px; } }
+@media (max-width: 680px) { .portion-module-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 680px) { .topbar-actions .feedback-open-button { height: 34px; padding: 0 8px; font-size: 9px; } }
 @media (max-width: 400px) { .topbar { padding: 0 12px; } .page-wrap { padding-right: 12px; padding-left: 12px; } .welcome-row { padding-left: 14px; } .eyebrow { font-size: 7px; } h1 { font-size: 19px; } .welcome-art { right: -60px; } .subject-description { max-width: 235px; line-height: 1.5; } .primary-button { padding: 0 9px; } .file-row { gap: 8px; padding-right: 7px; padding-left: 8px; } .file-action { width: 25px; } }
 @media (max-width: 480px) { .login-screen { justify-content: center; padding: 78px 16px 20px; } .login-brand { top: 22px; left: 50%; } .login-theme-toggle { top: 72px; right: 16px; } .login-card { padding: 30px 24px 23px; } .login-art { right: 16px; } .login-card h1 { max-width: 245px; font-size: 22px; } }
@@ -498,6 +509,7 @@ html[data-theme="dark"] .revision-icon,
 html[data-theme="dark"] .notes-icon,
 html[data-theme="dark"] .contribution-icon,
 html[data-theme="dark"] .exam-papers-icon,
+html[data-theme="dark"] .portions-icon,
 html[data-theme="dark"] .section-count,
 html[data-theme="dark"] .files-total,
 html[data-theme="dark"] .share-choice-icon,
@@ -505,6 +517,9 @@ html[data-theme="dark"] .feedback-notice,
 html[data-theme="dark"] .contribution-reminder-icon { color: #b6d2bb; background: #2a3b30; }
 html[data-theme="dark"] .file-label { color: #d7c49f; background: #3a3225; }
 html[data-theme="dark"] .file-label.notes-label { color: #b6d2bb; background: #2a3b30; }
+html[data-theme="dark"] .file-label.portion-label { color: #b6d2bb; background: #2a3b30; }
+html[data-theme="dark"] .portion-modules-heading h3 { color: #d7e0d8; }
+html[data-theme="dark"] .portion-modules-heading span { color: #a4b0a7; }
 html[data-theme="dark"] .pdf-icon.image-file-icon { color: #b6d2df; background: #26333b; }
 html[data-theme="dark"] .empty-folder,
 html[data-theme="dark"] .empty-folder::before { border-color: #435449; background: #2a3b30; }
